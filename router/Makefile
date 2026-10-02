@@ -83,8 +83,8 @@ endef
 define Package/wrtpilot/prerm
 #!/bin/sh
 [ -n "$${IPKG_INSTROOT}" ] && exit 0
-/etc/init.d/wrtpilotd stop
-/etc/init.d/wrtpilotd disable
+# the reset marker keeps wrtpilotd from re-applying until the package
+# manager stops and disables the service right after this script
 /usr/sbin/wrtpilot reset >/dev/null 2>&1
 exit 0
 endef
