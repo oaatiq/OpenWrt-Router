@@ -25,6 +25,8 @@ Usage: wrtpilot <command> [options]
   clients                    Known devices (JSON)
   groups                     Parental control groups (JSON)
   credentials                Show the app login (user "wrtpilot")
+  fingerprint                SHA-256 of the HTTPS certificate, to compare with
+                             the one the app shows when adding the router
   passwd [password]          Set the password of the "wrtpilot" app login
 `);
 }
@@ -67,6 +69,42 @@ function set_password(pw) {
 	fs.unlink(INITIAL_PW);
 	sys.run([ '/etc/init.d/rpcd', 'reload' ]);
 	print('Password updated.\n');
+
+	return 0;
+}
+
+// The app pins the certificate by the SHA-256 of its DER encoding.
+function cert_fingerprint() {
+	let c = config.cursor();
+
+	c.load('uhttpd');
+
+	let path = c.get('uhttpd', 'main', 'cert') ?? '/etc/uhttpd.crt';
+	let data = fs.readfile(path);
+
+	if (!data) {
+		warn(`No certificate at ${path}: HTTPS is not enabled (see docs/INSTALL.md)\n`);
+
+		return 1;
+	}
+
+	let pem = match(data, /-----BEGIN CERTIFICATE-----([^-]+)-----END CERTIFICATE-----/);
+	let tmp = '/tmp/wrtpilot-cert.der';
+
+	fs.writefile(tmp, pem ? b64dec(replace(pem[1], /[ \t\r\n]/g, '')) : data);
+
+	let r = sys.exec(`sha256sum ${tmp}`);
+	let hex = match(r.stdout, /^([0-9a-f]{64})/);
+
+	fs.unlink(tmp);
+
+	if (!hex) {
+		warn('sha256sum failed\n');
+
+		return 1;
+	}
+
+	print(join(':', map(match(hex[1], /../g), m => m[0])) + '\n');
 
 	return 0;
 }
@@ -123,6 +161,9 @@ else if (cmd == 'credentials') {
 		print(`User:     wrtpilot\nPassword: ${pw}\n\nChange it with: wrtpilot passwd\n`);
 	else
 		print('User: wrtpilot\nThe initial password was changed; set a new one with: wrtpilot passwd\n');
+}
+else if (cmd == 'fingerprint') {
+	rc = cert_fingerprint();
 }
 else if (cmd == 'passwd') {
 	let np = args[0];
