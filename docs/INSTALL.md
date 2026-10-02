@@ -14,10 +14,18 @@ This takes about five minutes. You need SSH access to the router as `root`
 
 In the app tap **Add my router** and log in with the router's **root** user
 and password (the same as for LuCI). If WrtPilot is not installed yet, the app
-offers **Install WrtPilot**: it runs the installer below on the router through
-the router's own API, shows its progress, then switches to the restricted
-`wrtpilot` login. The root password is used for this step only and is not
-saved. The router needs internet access.
+offers **Install WrtPilot**: it runs the same installer as below on the
+router, shows its progress, then switches to the restricted `wrtpilot` login.
+The root password is used for this step only and is not saved. The router
+needs internet access, and LuCI (installed on all official images).
+
+How it works: the router's API gives no shell, not even to root, so the app
+uses what LuCI's own pages let the root login do. It adds a one-time job to
+root's crontab (*System > Scheduled Tasks*) that downloads and runs the
+installer. The job deletes itself when it starts, so it runs once, within a
+minute. The app follows the installer in the system log (*Status > System
+Log*). If the router does not allow this, the app shows the commands for a
+computer instead.
 
 ## Quick install from a computer
 
@@ -210,6 +218,7 @@ Use a VPN such as Tailscale or WireGuard: see [TAILSCALE.md](TAILSCALE.md).
 | Cannot reach the router | `ping` it from the phone; same Wi‑Fi or VPN? |
 | The router's API is not reachable | `uci get uhttpd.main.ubus_prefix` should print `/ubus`; `opkg install uhttpd-mod-ubus` |
 | WrtPilot is not installed | `ubus list wrtpilot`; `/etc/init.d/rpcd restart` |
+| The installation failed (from the app) | `logread -e wrtpilot-install` shows the installer's messages; `cat /etc/crontabs/root` should not list `wrtpilot-app-install` any more |
 | Wrong username or password | `wrtpilot credentials`, or set a new one with `wrtpilot passwd` |
 | Traffic statistics stopped | `/etc/init.d/wrtpilotd restart`; `logread -e wrtpilot` |
 

@@ -155,7 +155,10 @@
     <string name="agent_install_auto_body">يمكن للتطبيق تثبيته لك الآن باستخدام بيانات دخول root هذه. تُستخدم للتثبيت فقط: ينتقل التطبيق بعدها إلى بيانات الدخول المحدودة «⁦wrtpilot⁩» ولا يحتفظ بكلمة مرور root. يحتاج الراوتر إلى اتصال بالإنترنت.</string>
     <string name="agent_install_needs_root">لتثبيته من التطبيق، أدخل أعلاه المستخدم root للراوتر وكلمة مروره (نفسها المستخدمة في LuCI).</string>
     <string name="agent_install_button">تثبيت WrtPilot</string>
-    <string name="agent_installing">جارٍ تثبيت WrtPilot على الراوتر… يستغرق ذلك دقيقة تقريبًا.</string>
+    <string name="agent_installing">جارٍ تثبيت WrtPilot على الراوتر… يستغرق ذلك دقيقة أو دقيقتين.</string>
+    <string name="agent_install_not_started">لم يبدأ الراوتر التثبيت. ثبّته من حاسوب بدلًا من ذلك (انظر أدناه).</string>
+    <string name="agent_install_not_permitted">لا يسمح هذا الراوتر للتطبيق بتثبيته باستخدام بيانات الدخول هذه. يلزم المستخدم root وواجهة LuCI (واجهة الويب للراوتر). ثبّته من حاسوب بدلًا من ذلك (انظر أدناه).</string>
+    <string name="agent_install_waiting">في انتظار أن يبدأ الراوتر التثبيت (حتى دقيقة واحدة)…</string>
     <string name="agent_install_failed">فشل التثبيت. رسائل الراوتر:</string>
     <string name="agent_install_manual">أو ثبّته من حاسوب</string>
     <string name="copy_command">نسخ الأمر</string>

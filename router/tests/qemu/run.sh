@@ -4,6 +4,8 @@
 # the API smoke test against it from the host.
 #
 # Usage: router/tests/qemu/run.sh <wrtpilot .ipk or .apk> [openwrt-version]
+#           (install.sh over SSH, then again through the router API like the
+#           app's button, with install.sh and the package served from this host)
 #        router/tests/qemu/run.sh online [openwrt-version]   (published installer, over SSH)
 #        router/tests/qemu/run.sh app [openwrt-version]      (published installer, through the
 #                                                             router API like the app's button)
@@ -27,6 +29,7 @@ ssh_r() {
 
 cleanup() {
 	[ -f "$WORK/qemu.pid" ] && kill "$(cat "$WORK/qemu.pid")" 2>/dev/null || true
+	[ -f "$WORK/http.pid" ] && kill "$(cat "$WORK/http.pid")" 2>/dev/null || true
 }
 trap cleanup EXIT
 
@@ -95,5 +98,22 @@ ssh_r 'fw4 reload >/dev/null 2>&1; sleep 1; nft list table inet wrtpilot >/dev/n
 echo "== reset and remove"
 ssh_r 'wrtpilot reset && ! nft list table inet wrtpilot >/dev/null 2>&1 && echo "reset removed the rules"'
 ssh_r "$REMOVE >/dev/null && ! ubus list wrtpilot >/dev/null 2>&1 && echo 'package removed cleanly'"
+
+case "$PKG" in online|app) ;; *)
+	echo "== install again through the router API, like the app (root login, LuCI's permissions)"
+	# the guest reaches this host as 192.168.1.2 (QEMU user networking)
+	SRV="$WORK/srv"
+	mkdir -p "$SRV"
+	cp "$PKG" "$SRV/"
+	sed -e 's#^BASE=.*#BASE=http://192.168.1.2:8000#' -e 's/^FEED=.*/FEED=0/' \
+		-e "s/^IPK_FILE=.*/IPK_FILE=$(basename "$PKG")/" -e "s/^APK_FILE=.*/APK_FILE=$(basename "$PKG")/" \
+		"$HERE/../../install.sh" > "$SRV/install.sh"
+	python3 -m http.server --bind 127.0.0.1 --directory "$SRV" 8000 > "$WORK/http.log" 2>&1 &
+	echo $! > "$WORK/http.pid"
+	sleep 1
+	python3 "$HERE/app_install.py" "http://127.0.0.1:$HTTP_PORT/ubus" "" "http://192.168.1.2:8000/install.sh"
+	ssh_r "$REMOVE >/dev/null && echo 'removed again'"
+	;;
+esac
 
 echo "== passed"

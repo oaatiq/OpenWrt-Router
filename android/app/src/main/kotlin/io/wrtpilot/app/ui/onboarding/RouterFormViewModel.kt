@@ -27,7 +27,8 @@ enum class FormStep { FORM, CHECKING, RESULT }
 
 /** Installing the router agent from the app (root login). */
 sealed interface InstallState {
-    data class Running(val log: String = "") : InstallState
+    /** [started]: the router runs the installer (it starts within a minute); [log]: its last lines */
+    data class Running(val log: String = "", val started: Boolean = false) : InstallState
     data class Failed(val message: UiText, val log: String = "") : InstallState
 }
 
@@ -166,15 +167,17 @@ class RouterFormViewModel @Inject constructor(
             val installer = AgentInstaller(routers.probe(ep, credentials(s)).ubus)
             try {
                 installer.start()
-                val login = installer.awaitLogin { log ->
-                    _state.update { it.copy(install = InstallState.Running(log)) }
+                val login = installer.awaitLogin { p ->
+                    _state.update { it.copy(install = InstallState.Running(p.log, p.started)) }
                 }
                 _state.update { it.copy(username = login.username, password = login.password, install = null, busy = false) }
                 connect()
             } catch (e: CancellationException) {
                 throw e
             } catch (e: AgentInstaller.NotPermitted) {
-                installFailed(uiText(R.string.agent_install_needs_root))
+                installFailed(uiText(R.string.agent_install_not_permitted))
+            } catch (e: AgentInstaller.NotStarted) {
+                installFailed(uiText(R.string.agent_install_not_started))
             } catch (e: AgentInstaller.Failed) {
                 installFailed(uiText(R.string.agent_install_failed), AgentInstaller.tail(e.log))
             } catch (e: Exception) {

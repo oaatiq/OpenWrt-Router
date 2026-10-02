@@ -137,7 +137,10 @@
     <string name="agent_install_auto_body">The app can install it for you now with this root login. It is used only for the installation: the app then switches to the limited “wrtpilot” login and does not keep the root password. The router needs internet access.</string>
     <string name="agent_install_needs_root">To install it from the app, enter the router’s root user and password above (the same as for LuCI).</string>
     <string name="agent_install_button">Install WrtPilot</string>
-    <string name="agent_installing">Installing WrtPilot on the router… This takes about a minute.</string>
+    <string name="agent_installing">Installing WrtPilot on the router… This takes a minute or two.</string>
+    <string name="agent_install_not_started">The router did not start the installation. Install it from a computer instead (see below).</string>
+    <string name="agent_install_not_permitted">This router does not let the app install it with this login. It needs the root login and LuCI (the router’s web interface). Install it from a computer instead (see below).</string>
+    <string name="agent_install_waiting">Waiting for the router to start the installation (up to a minute)…</string>
     <string name="agent_install_failed">The installation failed. The router’s messages:</string>
     <string name="agent_install_manual">Or install it from a computer</string>
     <string name="copy_command">Copy command</string>

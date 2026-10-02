@@ -321,7 +321,7 @@ private fun InstallAgentCard(state: RouterFormState, onInstall: () -> Unit) {
             }
             Spacer(Modifier.height(8.dp))
             when (install) {
-                is InstallState.Running -> InstallProgress(install.log)
+                is InstallState.Running -> InstallProgress(install)
                 else -> {
                     Text(
                         stringResource(if (state.username == "root") R.string.agent_install_auto_body else R.string.agent_install_needs_root),
@@ -352,17 +352,17 @@ private fun InstallAgentCard(state: RouterFormState, onInstall: () -> Unit) {
 }
 
 @Composable
-private fun InstallProgress(log: String) {
+private fun InstallProgress(install: InstallState.Running) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         CircularProgressIndicator(Modifier.size(24.dp), strokeWidth = 3.dp)
         Spacer(Modifier.width(12.dp))
         Text(
-            stringResource(R.string.agent_installing),
+            stringResource(if (install.started) R.string.agent_installing else R.string.agent_install_waiting),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onTertiaryContainer,
         )
     }
-    if (log.isNotBlank()) LogText(log)
+    if (install.log.isNotBlank()) LogText(install.log)
 }
 
 @Composable

@@ -448,6 +448,22 @@ def test_session_and_acl(c1, c2):
     check('error' in r and r['error'].get('code') == -32002, 'ACL: file.list denied for wrtpilot user')
     r = c1.raw('uci', 'get', {'config': 'rpcd'})
     check('error' in r and r['error'].get('code') == -32002, 'ACL: uci.get denied for wrtpilot user')
+
+    # the "wrtpilot-setup" group: root (read/write '*') reads the initial app
+    # password after installing from the app; paths outside the ACLs stay
+    # closed, even to root (stock OpenWrt has no shell access over the API)
+    Path('/etc/wrtpilot/initial_password').write_text('initial-pw-123\n')
+    root = Rpc('c1')
+    check(root.login(user='root'), 'root logs in')
+    r = root.raw('file', 'read', {'path': '/etc/wrtpilot/initial_password'})
+    check(r.get('result', [None, {}])[1].get('data') == 'initial-pw-123\n', 'ACL: root reads the initial app password')
+    r = root.raw('file', 'read', {'path': '/etc/config/rpcd'})
+    check(r.get('result', [None])[0] == 6, 'ACL: root cannot read files outside the ACLs')
+    r = root.raw('file', 'exec', {'command': '/bin/sh', 'params': ['-c', 'true']})
+    check(r.get('result', [None])[0] == 6, 'ACL: root cannot run a shell through the API')
+    r = c1.raw('file', 'read', {'path': '/etc/wrtpilot/initial_password'})
+    check('error' in r and r['error'].get('code') == -32002, 'ACL: initial password closed to the wrtpilot user')
+    os.unlink('/etc/wrtpilot/initial_password')
     r = c1.raw('wrtpilot', 'block', {'mac': C2_MAC, 'mode': 1})
     check(r.get('result', [None])[0] == 2, 'rpcd enforces argument types (INVALID_ARGUMENT)')
 

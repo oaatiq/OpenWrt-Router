@@ -12,6 +12,12 @@
 # On OpenWrt 25.12+ use: apk update && apk add --upgrade wrtpilot
 #
 # `sh install.sh <file>` installs a package file that is already on the router.
+#
+# `sh install.sh --app <id>` is how the app's "Install WrtPilot" button runs
+# it: the app has no shell on the router, so it adds a one-time job to root's
+# crontab (with the permissions LuCI gives the root login for System >
+# Scheduled Tasks). The job removes itself, and the output goes to the system
+# log (tag "wrtpilot-install") where the app follows it.
 
 BASE="${WRTPILOT_BASE:-https://github.com/oaatiq/OpenWrt-Router/releases/download/router-latest}"
 
@@ -31,6 +37,21 @@ JOl1DGWG3cnkUkQ9oiZXV7M2H1QOGroZe8AUoPFdf/+fmKGNXfZUp3M/cw==
 
 say() { printf '%s\n' "$*"; }
 die() { printf 'Error: %s\n' "$*" >&2; exit 1; }
+
+if [ "$1" = --app ]; then
+	export PATH=/usr/sbin:/usr/bin:/sbin:/bin
+	# the cron line already removed itself; make busybox crond reload root's crontab
+	sed -i '/wrtpilot-app-install/d' /etc/crontabs/root 2>/dev/null
+	{ echo root >> /etc/crontabs/cron.update; } 2>/dev/null
+	mkdir "/tmp/wrtpilot-app-$2" 2>/dev/null || exit 0	# this request already ran
+	rm -f /tmp/wrtpilot-install.rc
+	logger -t wrtpilot-install "started $2"
+	{ ( WRTPILOT_APP=1 sh "$0" ); echo "$? $2" > /tmp/wrtpilot-install.rc; } 2>&1 |
+		tee /tmp/wrtpilot-install.log | logger -t wrtpilot-install
+	read -r rc _ < /tmp/wrtpilot-install.rc
+	logger -t wrtpilot-install "finished $2 rc=$rc"
+	exit 0
+fi
 
 [ -w /etc/config ] || die "run this as root on the router"
 [ -f /etc/openwrt_release ] || die "this does not look like an OpenWrt router"
@@ -120,6 +141,12 @@ ubus list wrtpilot >/dev/null 2>&1 || {
 	sleep 2
 }
 ubus list wrtpilot >/dev/null 2>&1 || die "WrtPilot is installed but rpcd did not load it; check 'logread -e rpcd'"
+
+if [ -n "$WRTPILOT_APP" ]; then
+	# the app reads the login itself: keep the password out of the system log
+	say "WrtPilot is installed."
+	exit 0
+fi
 
 say ""
 say "WrtPilot is installed. Use this login in the app:"

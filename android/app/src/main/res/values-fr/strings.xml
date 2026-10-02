@@ -140,7 +140,10 @@
     <string name="agent_install_auto_body">L’application peut l’installer pour vous maintenant avec cet identifiant root. Il ne sert qu’à l’installation : l’application passe ensuite à l’identifiant limité « wrtpilot » et ne garde pas le mot de passe root. Le routeur doit avoir accès à Internet.</string>
     <string name="agent_install_needs_root">Pour l’installer depuis l’application, saisissez ci-dessus l’utilisateur root du routeur et son mot de passe (les mêmes que pour LuCI).</string>
     <string name="agent_install_button">Installer WrtPilot</string>
-    <string name="agent_installing">Installation de WrtPilot sur le routeur… Cela prend environ une minute.</string>
+    <string name="agent_installing">Installation de WrtPilot sur le routeur… Cela prend une à deux minutes.</string>
+    <string name="agent_install_not_started">Le routeur n’a pas lancé l’installation. Installez-le plutôt depuis un ordinateur (voir ci-dessous).</string>
+    <string name="agent_install_not_permitted">Ce routeur ne permet pas à l’application de l’installer avec cet identifiant. Il faut l’identifiant root et LuCI (l’interface web du routeur). Installez-le plutôt depuis un ordinateur (voir ci-dessous).</string>
+    <string name="agent_install_waiting">En attente du démarrage de l’installation par le routeur (jusqu’à une minute)…</string>
     <string name="agent_install_failed">L’installation a échoué. Messages du routeur :</string>
     <string name="agent_install_manual">Ou installez-le depuis un ordinateur</string>
     <string name="copy_command">Copier la commande</string>

@@ -15,5 +15,26 @@
 				]
 			}
 		}
+	},
+	"wrtpilot-setup": {
+		"description": "Setup from the app with the root login (logins with read/write '*'): read the result of the app's installation and the initial app password, or set a new one",
+		"read": {
+			"ubus": {
+				"file": [ "read" ]
+			},
+			"file": {
+				"/etc/wrtpilot/initial_password": [ "read" ],
+				"/tmp/wrtpilot-install.log": [ "read" ],
+				"/tmp/wrtpilot-install.rc": [ "read" ]
+			}
+		},
+		"write": {
+			"ubus": {
+				"file": [ "exec" ]
+			},
+			"file": {
+				"/usr/sbin/wrtpilot passwd *": [ "exec" ]
+			}
+		}
 	}
 }

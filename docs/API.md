@@ -34,6 +34,13 @@ The `wrtpilot` user's ACL only allows the `wrtpilot` object (read methods:
 `status clients live history events groups qos_get version`; everything else
 is write). Any other object returns `-32002`.
 
+The package also ships the ACL group `wrtpilot-setup`. Only logins with
+`read '*'` / `write '*'` get it, which by default means root. It lets the
+app, after installing WrtPilot with the root login, read
+`/etc/wrtpilot/initial_password` and the installer's result
+(`/tmp/wrtpilot-install.rc`, `.log`), and run `wrtpilot passwd <new>` (rpcd
+`file` object). The `wrtpilot` user does not get it.
+
 rpcd checks argument types against each method's signature (strings, 32-bit
 integers, booleans, arrays) and rejects unknown arguments with status 2.
 
