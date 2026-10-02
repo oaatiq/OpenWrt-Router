@@ -125,9 +125,16 @@ same locally if QEMU is installed).
 
 | Workflow | Jobs |
 | --- | --- |
-| `router.yml` | lint, unit and integration tests (ucode as in OpenWrt and ucode master); packages with the OpenWrt SDK (23.05, 24.10, 25.12); QEMU smoke test on each release |
+| `router.yml` | lint, unit and integration tests (ucode as in OpenWrt and ucode master); packages with the OpenWrt SDK (23.05, 24.10, 25.12); QEMU smoke test on each release; on `main`: publishes the signed package feed to the [`router-latest`](https://github.com/oaatiq/OpenWrt-Router/releases/tag/router-latest) release and runs the published one-line installer on OpenWrt in QEMU |
 | `android.yml` | unit tests, lint, debug and release APKs (artifact `wrtpilot-apk`) |
 | `apk.yml` | on every push to `main`: builds the app and publishes it as `wrtpilot.apk` in the [`latest`](https://github.com/oaatiq/OpenWrt-Router/releases/tag/latest) pre-release |
+
+The router package feed (the `router-latest` release: packages, `Packages*`
+for opkg, `packages.adb` for apk) is signed by the OpenWrt SDK with the private
+keys in the repository secrets `WRTPILOT_FEED_USIGN_KEY` (usign secret key
+file) and `WRTPILOT_FEED_APK_KEY` (ECDSA P-256 PEM). The public halves are in
+`router/keys/` and embedded in `router/install.sh`. Without the secrets the
+packages are still published, without a feed.
 
 APKs are signed with the shared debug key committed in
 `android/app/debug.keystore` (standard `android` passwords), so any build

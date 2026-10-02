@@ -20,13 +20,43 @@ ssh root@192.168.1.1          # your router's address; enter the root password
 wget -qO- https://github.com/oaatiq/OpenWrt-Router/releases/download/router-latest/install.sh | sh
 ```
 
-The script downloads the right package for your OpenWrt version, installs it
-with its dependencies and prints the login to enter in the app (user
-`wrtpilot`). Run the same command again later to update. Then continue with
+The script adds WrtPilot's **package feed** to OpenWrt's package manager
+(with its signing key, like any third-party OpenWrt repository), installs the
+`wrtpilot` package with its dependencies and prints the login to enter in the
+app (user `wrtpilot`). Then continue with
 [HTTPS](#4-turn-on-https-recommended) and
 [adding the router in the app](#5-add-the-router-in-the-app).
 
-The steps below do the same by hand.
+From then on WrtPilot is managed like any other OpenWrt package:
+
+| | OpenWrt 23.05 / 24.10 | OpenWrt 25.12+ |
+| --- | --- | --- |
+| Update | `opkg update && opkg upgrade wrtpilot`, or LuCI › System › Software › Updates | `apk update && apk add --upgrade wrtpilot` |
+| After a firmware upgrade | `opkg update && opkg install wrtpilot` | `apk update && apk add wrtpilot` |
+
+A firmware upgrade keeps the feed, the key, your WrtPilot settings and the app
+login, but (like for every package you installed yourself) the package itself
+has to be installed again with the command above; the app then works exactly
+as before.
+
+### Adding the feed by hand
+
+Instead of running the script you can add the feed yourself:
+
+```sh
+# OpenWrt 23.05 / 24.10
+wget -qO /etc/opkg/keys/42af730eb294d6fe https://raw.githubusercontent.com/oaatiq/OpenWrt-Router/main/router/keys/42af730eb294d6fe
+echo 'src/gz wrtpilot https://github.com/oaatiq/OpenWrt-Router/releases/download/router-latest' >> /etc/opkg/customfeeds.conf
+opkg update && opkg install wrtpilot
+
+# OpenWrt 25.12+
+wget -qO /etc/apk/keys/wrtpilot-feed.pem https://raw.githubusercontent.com/oaatiq/OpenWrt-Router/main/router/keys/wrtpilot-feed.pem
+echo 'https://github.com/oaatiq/OpenWrt-Router/releases/download/router-latest/packages.adb' >> /etc/apk/repositories.d/customfeeds.list
+apk update && apk add wrtpilot
+```
+
+The steps below install a downloaded package file instead (no feed, so no
+updates through the package manager).
 
 ## 1. Get the package
 
@@ -36,14 +66,14 @@ release:
 
 | OpenWrt | File |
 | --- | --- |
-| 23.05, 24.10 | `wrtpilot-router-openwrt23-24.ipk` |
-| 25.12 and later | `wrtpilot-router-openwrt25.apk` (an OpenWrt package, not the phone app) |
+| 23.05, 24.10 | `wrtpilot_<version>_all.ipk` |
+| 25.12 and later | `wrtpilot-<version>.apk` (an OpenWrt package, not the phone app) |
 
 Copy it to the router (`-O` makes recent OpenSSH clients use the protocol the
 router understands):
 
 ```sh
-scp -O wrtpilot-router-openwrt23-24.ipk root@192.168.1.1:/tmp/
+scp -O wrtpilot_*.ipk root@192.168.1.1:/tmp/
 ```
 
 ## 2. Install
@@ -52,10 +82,10 @@ scp -O wrtpilot-router-openwrt23-24.ipk root@192.168.1.1:/tmp/
 ssh root@192.168.1.1
 
 # OpenWrt 23.05 / 24.10
-opkg update && opkg install /tmp/wrtpilot-router-openwrt23-24.ipk
+opkg update && opkg install /tmp/wrtpilot_*.ipk
 
 # OpenWrt 25.12 and later
-apk update && apk add --allow-untrusted /tmp/wrtpilot-router-openwrt25.apk
+apk update && apk add --allow-untrusted /tmp/wrtpilot-*.apk
 ```
 
 The package installs its dependencies from the OpenWrt feeds and then:
@@ -147,8 +177,10 @@ Re-enable with `uci set wrtpilot.main.enabled=1; uci commit wrtpilot; wrtpilot a
 
 ## Updating and removing
 
-Install a newer package the same way; settings in `/etc/config/wrtpilot` and
-the usage history in `/etc/wrtpilot` are kept (also across sysupgrade).
+With the feed, update like any package (see the table above). Without it,
+install a newer package file the same way. Settings in `/etc/config/wrtpilot`
+and the usage history in `/etc/wrtpilot` are always kept, also across
+firmware upgrades.
 
 ```sh
 opkg remove wrtpilot        # apk del wrtpilot on 25.12

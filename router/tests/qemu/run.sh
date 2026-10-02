@@ -4,10 +4,12 @@
 # the API smoke test against it from the host.
 #
 # Usage: router/tests/qemu/run.sh <wrtpilot .ipk or .apk> [openwrt-version]
+#        router/tests/qemu/run.sh online [openwrt-version]   (published installer)
 # Needs: qemu-system-x86_64, curl, ssh, python3 (KVM is used when available)
 set -eu
 
-PKG="$(realpath "$1")"
+PKG="$1"
+[ "$PKG" = online ] || PKG="$(realpath "$PKG")"
 VERSION="${2:-23.05.6}"
 HERE="$(cd "$(dirname "$0")" && pwd)"
 WORK="${WORK:-$(mktemp -d)}"
@@ -59,14 +61,21 @@ for i in $(seq 1 60); do
 	sleep 2
 done
 
-echo "== install $(basename "$PKG") with install.sh"
-case "$PKG" in
-*.apk)	REMOTE=/tmp/wrtpilot.apk; REMOVE='apk del wrtpilot' ;;	# OpenWrt 25.12+
-*)	REMOTE=/tmp/wrtpilot.ipk; REMOVE='opkg remove wrtpilot' ;;
-esac
-ssh_r "cat > $REMOTE" < "$PKG"
-ssh_r 'cat > /tmp/install.sh' < "$HERE/../../install.sh"
-ssh_r "sh /tmp/install.sh $REMOTE"
+REMOVE='if command -v opkg >/dev/null; then opkg remove wrtpilot; else apk del wrtpilot; fi'
+if [ "$PKG" = online ]; then
+	echo "== install with the published one-line installer"
+	ssh_r 'wget -qO- https://github.com/oaatiq/OpenWrt-Router/releases/download/router-latest/install.sh | sh'
+	ssh_r 'grep -h wrtpilot /etc/opkg/customfeeds.conf /etc/apk/repositories.d/customfeeds.list 2>/dev/null || echo "(no feed configured)"'
+else
+	echo "== install $(basename "$PKG") with install.sh"
+	case "$PKG" in
+	*.apk)	REMOTE=/tmp/wrtpilot.apk ;;	# OpenWrt 25.12+
+	*)	REMOTE=/tmp/wrtpilot.ipk ;;
+	esac
+	ssh_r "cat > $REMOTE" < "$PKG"
+	ssh_r 'cat > /tmp/install.sh' < "$HERE/../../install.sh"
+	ssh_r "sh /tmp/install.sh $REMOTE"
+fi
 ssh_r "wrtpilot passwd '$PASSWORD' && wrtpilot credentials | head -1"
 ssh_r 'pgrep -f wrtpilotd >/dev/null && echo "wrtpilotd running"'
 ssh_r 'wrtpilot fingerprint || true'   # needs HTTPS (default on 24.10+ images)

@@ -65,6 +65,8 @@ jobs:
         run: |
           mkdir -p "$RUNNER_TEMP/feed"
           cp -r router "$RUNNER_TEMP/feed/wrtpilot"
+          # every build gets a higher release number, so opkg/apk offer it as an update
+          sed -i 's/^PKG_RELEASE:=.*/PKG_RELEASE:=${{ github.run_number }}/' "$RUNNER_TEMP/feed/wrtpilot/Makefile"
 
       - name: Build with the OpenWrt SDK
         uses: openwrt/gh-action-sdk@v9
@@ -75,14 +77,23 @@ jobs:
           PACKAGES: wrtpilot
           NO_REFRESH_CHECK: 1
           NO_SHFMT_CHECK: 1
+          # signed package index (the feed) when the signing keys are configured
+          INDEX: ${{ secrets.WRTPILOT_FEED_USIGN_KEY != '' && '1' || '' }}
+          KEY_BUILD: ${{ secrets.WRTPILOT_FEED_USIGN_KEY }}
+          PRIVATE_KEY: ${{ secrets.WRTPILOT_FEED_APK_KEY }}
 
       - name: Collect package
         run: |
-          mkdir -p "$RUNNER_TEMP/out"
-          find "$GITHUB_WORKSPACE/bin" \( -name 'wrtpilot_*.ipk' -o -name 'wrtpilot-[0-9]*.apk' \) \
-            -exec cp {} "$RUNNER_TEMP/out/" \;
-          ls -l "$RUNNER_TEMP/out"
-          test -n "$(ls "$RUNNER_TEMP/out")"
+          out="$RUNNER_TEMP/out"
+          mkdir -p "$out"
+          pkg=$(find "$GITHUB_WORKSPACE/bin" \( -name 'wrtpilot_*.ipk' -o -name 'wrtpilot-[0-9]*.apk' \) | head -n1)
+          test -n "$pkg"
+          cp "$pkg" "$out/"
+          # feed index (Packages* for opkg, packages.adb for apk), when built
+          for f in Packages Packages.gz Packages.sig packages.adb; do
+            [ ! -f "$(dirname "$pkg")/$f" ] || cp "$(dirname "$pkg")/$f" "$out/"
+          done
+          ls -l "$out"
 
       - uses: actions/upload-artifact@v7
         with:
@@ -121,7 +132,7 @@ jobs:
           WORK: ${{ runner.temp }}/qemu
         run: |
           mkdir -p "$WORK"
-          router/tests/qemu/run.sh pkg/wrtpilot* "${{ matrix.release }}"
+          router/tests/qemu/run.sh pkg/wrtpilot[_-]* "${{ matrix.release }}"
 
       - name: Upload console log
         if: failure()
@@ -138,6 +149,8 @@ jobs:
     runs-on: ubuntu-24.04
     permissions:
       contents: write
+    env:
+      SIGNED: ${{ secrets.WRTPILOT_FEED_USIGN_KEY != '' && secrets.WRTPILOT_FEED_APK_KEY != '' }}
     steps:
       - uses: actions/checkout@v7
 
@@ -150,27 +163,83 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          set -e
           out="$RUNNER_TEMP/release"
-          mkdir -p "$out"
-          # PKGARCH:=all: one .ipk serves 23.05 and 24.10, the .apk serves 25.12+
-          cp pkg/wrtpilot-openwrt-23.05.6/wrtpilot_*.ipk "$out/wrtpilot-router-openwrt23-24.ipk"
-          cp pkg/wrtpilot-openwrt-25.12.5/wrtpilot-*.apk "$out/wrtpilot-router-openwrt25.apk"
-          cp router/install.sh "$out/install.sh"
-          ls -l "$out"
-          version=$(sed -n 's/^PKG_VERSION:=//p' router/Makefile)-r$(sed -n 's/^PKG_RELEASE:=//p' router/Makefile)
+          mkdir -p "$out/pkgs" "$out/index"
+          ipk_dir=pkg/wrtpilot-openwrt-23.05.6     # PKGARCH:=all: also serves 24.10
+          apk_dir=pkg/wrtpilot-openwrt-25.12.5     # 25.12+
+          ipk=$(basename "$(ls "$ipk_dir"/wrtpilot_*.ipk)")
+          apk=$(basename "$(ls "$apk_dir"/wrtpilot-*.apk)")
+          cp "$ipk_dir/$ipk" "$apk_dir/$apk" "$out/pkgs/"
+          if [ "$SIGNED" = true ]; then
+            cp "$ipk_dir/Packages" "$ipk_dir/Packages.gz" "$ipk_dir/Packages.sig" "$apk_dir/packages.adb" "$out/index/"
+            feed=1
+          else
+            echo "::warning::Feed signing keys are not configured (secrets WRTPILOT_FEED_USIGN_KEY, WRTPILOT_FEED_APK_KEY): publishing the packages without a feed"
+            feed=0
+          fi
+          sed -e "s/^FEED=.*/FEED=$feed/" -e "s/^IPK_FILE=.*/IPK_FILE=$ipk/" -e "s/^APK_FILE=.*/APK_FILE=$apk/" \
+            router/install.sh > "$out/index/install.sh"
+          version=${ipk#wrtpilot_}; version=${version%_all.ipk}
+          ls -lR "$out"
           notes="WrtPilot router package ${version}, built from \`main\` at ${GITHUB_SHA::7} and tested on OpenWrt 23.05, 24.10 and 25.12.
 
-          **Install or update** — on the router (SSH as root), run:
+          **Install or update**: on the router (SSH as root), run:
 
           \`\`\`
           wget -qO- https://github.com/${GITHUB_REPOSITORY}/releases/download/router-latest/install.sh | sh
           \`\`\`
 
-          It picks the right file for your OpenWrt version and prints the login for the app.
+          It adds this release as a signed OpenWrt package feed and installs the \`wrtpilot\` package, so later updates come with \`opkg upgrade\` (or LuCI > System > Software).
           Manual install: see [docs/INSTALL.md](https://github.com/${GITHUB_REPOSITORY}/blob/main/docs/INSTALL.md).
 
           The phone app is in the [latest](https://github.com/${GITHUB_REPOSITORY}/releases/tag/latest) release."
-          gh release delete router-latest --repo "$GITHUB_REPOSITORY" --yes --cleanup-tag || true
-          gh release create router-latest "$out"/* --repo "$GITHUB_REPOSITORY" \
-            --target "$GITHUB_SHA" --prerelease \
-            --title "Router package (${version})" --notes "$notes"
+          repo="--repo $GITHUB_REPOSITORY"
+          if gh release view router-latest $repo >/dev/null 2>&1; then
+            # update in place so the feed URL never disappears: packages first, then the index
+            gh release upload router-latest "$out"/pkgs/* $repo --clobber
+            gh release upload router-latest "$out"/index/* $repo --clobber
+            keep=" $( (ls "$out/pkgs"; ls "$out/index") | tr '\n' ' ') "
+            for a in $(gh release view router-latest $repo --json assets -q '.assets[].name'); do
+              case "$keep" in *" $a "*) ;; *) gh release delete-asset router-latest "$a" $repo --yes ;; esac
+            done
+            gh release edit router-latest $repo --prerelease --title "Router package (${version})" --notes "$notes"
+          else
+            gh release create router-latest "$out"/pkgs/* "$out"/index/* $repo \
+              --target "$GITHUB_SHA" --prerelease --title "Router package (${version})" --notes "$notes"
+          fi
+
+  verify:
+    name: Published install (OpenWrt ${{ matrix.release }})
+    # runs the one-line installer from the release, exactly as users do
+    needs: publish
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        release: ['23.05.6', '25.12.5']
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install QEMU
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q qemu-system-x86 qemu-utils
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' \
+            | sudo tee /etc/udev/rules.d/99-kvm.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm || true
+
+      - name: Boot OpenWrt and run the published installer
+        env:
+          WORK: ${{ runner.temp }}/qemu
+        run: |
+          mkdir -p "$WORK"
+          router/tests/qemu/run.sh online "${{ matrix.release }}"
+
+      - name: Upload console log
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: qemu-console-online-${{ matrix.release }}
+          path: ${{ runner.temp }}/qemu/console.log

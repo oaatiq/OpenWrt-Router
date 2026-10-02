@@ -1,1 +1,5 @@
 /etc/wrtpilot/
+/etc/opkg/keys/42af730eb294d6fe
+/etc/opkg/customfeeds.conf
+/etc/apk/keys/wrtpilot-feed.pem
+/etc/apk/repositories.d/customfeeds.list
