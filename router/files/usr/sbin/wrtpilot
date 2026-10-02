@@ -1,0 +1,141 @@
+#!/usr/bin/ucode -S
+// WrtPilot command line tool.
+
+'use strict';
+
+import * as fs from 'fs';
+import { sys, shellquote, VERSION } from 'wrtpilot.util';
+import * as api from 'wrtpilot.api';
+import * as applier from 'wrtpilot.apply';
+import * as config from 'wrtpilot.config';
+
+const INITIAL_PW = '/etc/wrtpilot/initial_password';
+
+function usage() {
+	print(`WrtPilot ${VERSION}
+
+Usage: wrtpilot <command> [options]
+
+  apply [--quiet] [--boot]   Regenerate firewall / shaping / DNS state from UCI
+  reset [--disable]          Remove every WrtPilot rule (lockout recovery);
+                             --disable also stops re-applying on boot
+  unblock-all                Clear all blocks and pauses from the config
+  status                     Router and agent status (JSON)
+  clients                    Known devices (JSON)
+  groups                     Parental control groups (JSON)
+  credentials                Show the app login (user "wrtpilot")
+  passwd [password]          Set the password of the "wrtpilot" app login
+`);
+}
+
+function out(v) {
+	print(sprintf('%.J\n', v));
+}
+
+function set_password(pw) {
+	if (pw == null || length(pw) < 8) {
+		warn('Password must have at least 8 characters\n');
+
+		return 1;
+	}
+
+	let p = fs.popen(`uhttpd -m ${shellquote(pw)}`, 'r');
+	let hash = trim(p?.read('all') ?? '');
+
+	p?.close();
+
+	if (!match(hash, /^\$[0-9a-z]+\$/)) {
+		warn('Could not hash the password (is uhttpd installed?)\n');
+
+		return 1;
+	}
+
+	let c = config.cursor();
+
+	c.load('rpcd');
+
+	if (c.get('rpcd', 'wrtpilot') != 'login') {
+		c.set('rpcd', 'wrtpilot', 'login');
+		c.set('rpcd', 'wrtpilot', 'username', 'wrtpilot');
+		c.set('rpcd', 'wrtpilot', 'read', [ 'wrtpilot' ]);
+		c.set('rpcd', 'wrtpilot', 'write', [ 'wrtpilot' ]);
+	}
+
+	c.set('rpcd', 'wrtpilot', 'password', hash);
+	c.commit('rpcd');
+	fs.unlink(INITIAL_PW);
+	sys.run([ '/etc/init.d/rpcd', 'reload' ]);
+	print('Password updated.\n');
+
+	return 0;
+}
+
+let args = slice(ARGV ?? [], 0);
+let cmd = shift(args);
+let flags = {};
+
+for (let a in args)
+	if (substr(a, 0, 2) == '--')
+		flags[substr(a, 2)] = true;
+
+let rc = 0;
+
+if (cmd == 'apply') {
+	let r = applier.apply({ boot: flags.boot });
+
+	if (!flags.quiet || !r.ok)
+		out(r);
+
+	rc = r.ok ? 0 : 1;
+}
+else if (cmd == 'reset') {
+	out(applier.reset({ disable: flags.disable }));
+}
+else if (cmd == 'unblock-all') {
+	let c = config.cursor();
+
+	c.load(config.CONFIG);
+	c.foreach(config.CONFIG, 'device', function(s) {
+		for (let o in [ 'blocked', 'blocked_until', 'paused_until' ])
+			c.delete(config.CONFIG, s['.name'], o);
+	});
+	c.foreach(config.CONFIG, 'group', function(s) {
+		c.delete(config.CONFIG, s['.name'], 'paused_until');
+	});
+	c.commit(config.CONFIG);
+	fs.unlink(applier.QUOTA_STATE);
+	out(applier.apply());
+}
+else if (cmd == 'status') {
+	out(api.status());
+}
+else if (cmd == 'clients') {
+	out(api.clients());
+}
+else if (cmd == 'groups') {
+	out(api.groups());
+}
+else if (cmd == 'credentials') {
+	let pw = trim(fs.readfile(INITIAL_PW) ?? '');
+
+	if (pw != '')
+		print(`User:     wrtpilot\nPassword: ${pw}\n\nChange it with: wrtpilot passwd\n`);
+	else
+		print('User: wrtpilot\nThe initial password was changed; set a new one with: wrtpilot passwd\n');
+}
+else if (cmd == 'passwd') {
+	let np = args[0];
+
+	if (np == null || substr(np, 0, 2) == '--') {
+		print('New password: ');
+		np = trim(fs.stdin.read('line') ?? '');
+	}
+
+	rc = set_password(np);
+}
+else {
+	usage();
+	rc = (cmd == null || cmd == 'help' || cmd == '--help') ? 0 : 1;
+}
+
+exit(rc);

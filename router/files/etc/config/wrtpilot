@@ -1,0 +1,37 @@
+# WrtPilot configuration. Usually managed by the WrtPilot app; see
+# https://github.com/oaatiq/OpenWrt-Router/blob/main/docs/CONFIG.md
+
+config settings 'main'
+	option enabled '1'
+	# counter sampling interval in seconds
+	option sample_interval '2'
+	# daily totals and events are written here at most once per hour
+	# (use a USB disk path to spare the flash, e.g. /mnt/usb/wrtpilot)
+	option persist_path '/etc/wrtpilot'
+	# networks treated as LAN (client side)
+	list lan_network 'lan'
+	# days of daily totals kept on the router (the app keeps more)
+	option history_days '35'
+	# default reaction when a device exceeds its daily quota: notify | block
+	option quota_action 'notify'
+
+# Examples (normally created by the app):
+#
+# config device 'd_aabbccddeeff'
+#	option mac 'aa:bb:cc:dd:ee:ff'
+#	option name 'Kids tablet'
+#	option group 'kids'
+#	option blocked '0'              # 0 | internet | wifi
+#	option dl_limit_kbps '5000'
+#	option ul_limit_kbps '1000'
+#	option daily_quota_mb '2048'
+#
+# config group 'kids'
+#	option name 'Kids'
+#	option dns_filter 'cleanbrowsing_family'  # off | adguard_local | cleanbrowsing_family |
+#	                                          # cloudflare_family | adguard_family | opendns_family | custom
+#	option safesearch '1'
+#	list blocklist 'tiktok.com'
+#	list schedule 'mon-fri 07:00-08:00'
+#	list schedule 'mon-fri 17:00-21:00'
+#	list schedule 'sat-sun 09:00-22:00'

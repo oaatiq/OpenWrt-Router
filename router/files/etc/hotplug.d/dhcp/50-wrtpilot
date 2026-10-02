@@ -1,0 +1,13 @@
+#!/bin/sh
+# Tell wrtpilotd about DHCP lease events so new devices are noticed at once.
+case "$ACTION" in
+	add|old|update) ;;
+	*) exit 0 ;;
+esac
+
+clean() { printf '%s' "$1" | tr -cd 'A-Za-z0-9._:-'; }
+
+ubus -t 2 call wrtpilotd hotplug \
+	"{\"action\":\"$ACTION\",\"mac\":\"$(clean "$MACADDR")\",\"ip\":\"$(clean "$IPADDR")\",\"hostname\":\"$(clean "$HOSTNAME")\"}" \
+	>/dev/null 2>&1 &
+exit 0

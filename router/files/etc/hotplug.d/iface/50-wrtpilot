@@ -1,0 +1,16 @@
+#!/bin/sh
+# LAN bridges are recreated on network restarts, which drops tc shapers:
+# re-apply when a LAN network comes up.
+[ "$ACTION" = ifup ] || exit 0
+[ -x /usr/sbin/wrtpilot ] || exit 0
+
+. /lib/functions.sh
+config_load wrtpilot
+config_get lan_networks main lan_network lan
+
+for net in $lan_networks; do
+	[ "$net" = "$INTERFACE" ] || continue
+	( sleep 2; /usr/sbin/wrtpilot apply --quiet ) >/dev/null 2>&1 &
+	break
+done
+exit 0

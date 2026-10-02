@@ -1,0 +1,31 @@
+#!/bin/sh
+# WrtPilot first-install setup:
+#  * rpcd login "wrtpilot" restricted to the wrtpilot ubus namespace
+#  * uhttpd serves ubus over HTTP(S) at /ubus
+#  * fw4 include symlink for the generated nftables rules
+
+mkdir -p /etc/wrtpilot /var/run/wrtpilot
+chmod 700 /etc/wrtpilot
+
+if [ "$(uci -q get rpcd.wrtpilot)" != "login" ]; then
+	pw="$(tr -dc 'A-Za-z0-9' </dev/urandom 2>/dev/null | head -c 16)"
+	hash="$(uhttpd -m "$pw" 2>/dev/null)"
+	if [ -n "$pw" ] && [ -n "$hash" ]; then
+		uci -q batch <<-EOT
+			set rpcd.wrtpilot=login
+			set rpcd.wrtpilot.username='wrtpilot'
+			set rpcd.wrtpilot.password='$hash'
+			add_list rpcd.wrtpilot.read='wrtpilot'
+			add_list rpcd.wrtpilot.write='wrtpilot'
+		EOT
+		uci commit rpcd
+		( umask 077; printf '%s\n' "$pw" > /etc/wrtpilot/initial_password )
+	fi
+fi
+
+if [ -z "$(uci -q get uhttpd.main.ubus_prefix)" ]; then
+	uci set uhttpd.main.ubus_prefix='/ubus'
+	uci commit uhttpd
+fi
+
+exit 0

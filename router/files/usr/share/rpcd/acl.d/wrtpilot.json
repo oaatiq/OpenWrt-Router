@@ -1,0 +1,19 @@
+{
+	"wrtpilot": {
+		"description": "WrtPilot app: per-device control (wrtpilot ubus namespace only)",
+		"read": {
+			"ubus": {
+				"wrtpilot": [ "status", "clients", "live", "history", "events", "groups", "qos_get", "version" ]
+			}
+		},
+		"write": {
+			"ubus": {
+				"wrtpilot": [
+					"set_device", "forget_device", "block", "unblock", "set_limit",
+					"set_group", "delete_group", "pause", "resume",
+					"qos_set", "set_offload", "apply"
+				]
+			}
+		}
+	}
+}

@@ -1,0 +1,346 @@
+#!/usr/bin/ucode -S
+// WrtPilot statistics collector (procd service, see /etc/init.d/wrtpilotd).
+//
+// Samples the nft traffic counters every `sample_interval` seconds, keeps
+// rates / minute / daily totals, detects new devices, enforces daily quotas,
+// expires timed blocks and pauses, and publishes the "wrtpilotd" ubus object
+// that the rpcd plugin queries.
+
+'use strict';
+
+import * as uloop from 'uloop';
+import * as ubus from 'ubus';
+import * as fs from 'fs';
+import { sys, VERSION, log, local_midnight, day_key, read_json, write_json } from 'wrtpilot.util';
+import * as config from 'wrtpilot.config';
+import * as sysinfo from 'wrtpilot.sysinfo';
+import * as stats from 'wrtpilot.stats';
+import * as applier from 'wrtpilot.apply';
+import { ACCT_TABLE } from 'wrtpilot.nft';
+
+const PRESENCE_INTERVAL = 10;
+const CONFIG_FILE = '/etc/config/wrtpilot';
+
+let cfg = config.load();
+let cfg_mtime = fs.stat(CONFIG_FILE)?.mtime;
+let st = stats.create({ interval: cfg.settings.sample_interval });
+let last_apply = 0, missing = 0, last_presence = 0;
+let cur_hour = null, cur_day = day_key(sys.time());
+
+stats.load(st, cfg.settings.persist_path, cfg.settings.history_days);
+
+function mono() {
+	let c = clock(true);
+
+	return c[0] + c[1] / 1000000000.0;
+}
+
+function reload_config() {
+	let m = fs.stat(CONFIG_FILE)?.mtime;
+
+	if (m != cfg_mtime) {
+		cfg_mtime = m;
+		cfg = config.load();
+	}
+}
+
+function run_apply(reason) {
+	last_apply = sys.time();
+
+	let r = applier.apply();
+
+	if (!r.ok)
+		log(`apply (${reason}) failed: ${r.error}: ${r.message}`);
+}
+
+function refresh_presence(now) {
+	let lan = sysinfo.lan_devices(cfg.settings);
+	let seen = {}, pairs = [];
+
+	for (let n in sysinfo.neighbors()) {
+		if (index(lan, n.dev) < 0)
+			continue;
+
+		push(pairs, [ n.ip, n.mac ]);
+
+		if (n.state == 'FAILED' || n.state == 'INCOMPLETE')
+			continue;
+
+		let e = seen[n.mac] ??= {};
+		let active = (n.state == 'REACHABLE' || n.state == 'DELAY' || n.state == 'PROBE');
+
+		if (index(n.ip, ':') < 0)
+			e.ip = n.ip;
+
+		if (active) {
+			e.active = true;
+			e.conn ??= 'lan';
+		}
+	}
+
+	for (let mac, l in sysinfo.leases()) {
+		let e = seen[mac] ??= {};
+
+		if (l.ip) {
+			e.ip ??= l.ip;
+			push(pairs, [ l.ip, mac ]);
+		}
+
+		for (let ip6 in l.ipv6)
+			push(pairs, [ ip6, mac ]);
+
+		if (l.hostname)
+			e.hostname = l.hostname;
+	}
+
+	for (let mac, w in sysinfo.wifi_clients()) {
+		let e = seen[mac] ??= {};
+
+		e.active = true;
+		e.conn = w.band;
+	}
+
+	stats.learn_ips(st, pairs, now);
+
+	for (let mac in stats.update_presence(st, seen, now)) {
+		if (cfg.devices[mac])
+			continue;
+
+		stats.add_event(st, cfg.settings.persist_path, 'new_device', mac, {
+			ip: seen[mac].ip ?? '',
+			hostname: seen[mac].hostname ?? '',
+			conn: seen[mac].conn ?? ''
+		}, now);
+	}
+
+	last_presence = now;
+}
+
+function check_quotas(now) {
+	let q = read_json(applier.QUOTA_STATE, {});
+	let changed = false;
+	let today = day_key(now);
+
+	for (let mac, until in q) {
+		if (until <= now) {
+			delete q[mac];
+			changed = true;
+		}
+	}
+
+	for (let mac, d in cfg.devices) {
+		if (d.daily_quota_mb <= 0)
+			continue;
+
+		let used = stats.today_usage(st, mac, now);
+
+		if (used < d.daily_quota_mb * 1048576 || st.quota_notified[today]?.[mac])
+			continue;
+
+		let action = d.quota_action || cfg.settings.quota_action;
+
+		(st.quota_notified[today] ??= {})[mac] = true;
+		st.dirty = true;
+
+		stats.add_event(st, cfg.settings.persist_path, 'quota_exceeded', mac, {
+			used_mb: int(used / 1048576),
+			quota_mb: d.daily_quota_mb,
+			action: action
+		}, now);
+
+		if (action == 'block') {
+			q[mac] = local_midnight(now, 1);
+			changed = true;
+		}
+	}
+
+	if (changed) {
+		write_json(applier.QUOTA_STATE, q);
+		run_apply('quota');
+	}
+}
+
+// Clear timed blocks and pauses whose time is up. The firewall already
+// stopped enforcing them (absolute time match); this tidies the config and
+// lifts Wi-Fi bans.
+function expire(now) {
+	let c = config.cursor();
+	let changed = false;
+
+	c.load(config.CONFIG);
+
+	for (let mac, d in cfg.devices) {
+		if (d.blocked && d.blocked_until > 0 && d.blocked_until <= now) {
+			config.set_device_block(c, mac, null, 0);
+			changed = true;
+		}
+
+		if (d.paused_until > 0 && d.paused_until <= now) {
+			config.set_pause(c, 'device', mac, 0);
+			changed = true;
+		}
+	}
+
+	for (let gid, g in cfg.groups) {
+		if (g.paused_until > 0 && g.paused_until <= now) {
+			config.set_pause(c, 'group', gid, 0);
+			changed = true;
+		}
+	}
+
+	if (changed) {
+		c.commit(config.CONFIG);
+		reload_config();
+		run_apply('expiry');
+	}
+}
+
+function on_minute(now) {
+	reload_config();
+	check_quotas(now);
+	expire(now);
+
+	let day = day_key(now);
+	let hour = now - now % 3600;
+
+	if (day != cur_day) {
+		cur_day = day;
+		stats.prune_days(st, now, cfg.settings.history_days);
+		// extends the schedule horizon, lifts quota blocks
+		run_apply('new day');
+	}
+
+	if (hour != cur_hour) {
+		if (cur_hour != null) {
+			stats.save(st, cfg.settings.persist_path);
+			stats.prune_minutes(now);
+			stats.gc_rings(st);
+
+			// refreshes Wi-Fi bans and schedule windows
+			if (now - last_apply > 600)
+				run_apply('hourly');
+		}
+
+		cur_hour = hour;
+	}
+}
+
+function tick() {
+	let now = sys.time();
+	let r = sys.exec(`nft -j list table inet ${ACCT_TABLE}`);
+	let acct = (r.code == 0) ? stats.parse_acct(r.stdout) : null;
+
+	if (!acct) {
+		// our tables vanished (firewall flushed, include disabled): restore
+		if (++missing >= 2 && now - last_apply > 30)
+			run_apply('tables missing');
+	}
+	else {
+		missing = 0;
+
+		let res = stats.sample(st, acct, now, mono());
+
+		if (length(res.unmapped) && now - last_presence >= 2)
+			refresh_presence(now);
+
+		if (res.minute_changed)
+			on_minute(now);
+	}
+
+	if (now - last_presence >= PRESENCE_INTERVAL)
+		refresh_presence(now);
+}
+
+function guarded(fn) {
+	return function(req) {
+		try {
+			return fn(req);
+		}
+		catch (e) {
+			log(`ubus handler error: ${e.message}`);
+
+			return { ok: false, error: 'internal', message: e.message };
+		}
+	};
+}
+
+function shutdown() {
+	stats.flush_minute(st, -1);
+	stats.save(st, cfg.settings.persist_path);
+	uloop.end();
+}
+
+uloop.init();
+
+let conn = ubus.connect();
+
+if (!conn) {
+	log('cannot connect to ubus');
+	exit(1);
+}
+
+conn.publish('wrtpilotd', {
+	ping: {
+		call: guarded(() => ({ ok: true, version: VERSION, interval: st.interval }))
+	},
+	snapshot: {
+		call: guarded(() => stats.snapshot(st, sys.time()))
+	},
+	live: {
+		args: { macs: [], samples: 0 },
+		call: guarded((req) => stats.live(st, req.args.macs, req.args.samples))
+	},
+	history: {
+		args: { mac: '', resolution: '', since: 0 },
+		call: guarded((req) => stats.history(st, req.args.mac ?? '', req.args.resolution ?? 'minute', req.args.since ?? 0, sys.time()))
+	},
+	events: {
+		args: { since_id: 0 },
+		call: guarded((req) => stats.events_since(st, req.args.since_id ?? 0))
+	},
+	hotplug: {
+		args: { action: '', mac: '', ip: '', hostname: '' },
+		call: guarded(function(req) {
+			if (req.args.action == 'add' || req.args.action == 'old' || req.args.action == 'update')
+				refresh_presence(sys.time());
+
+			return { ok: true };
+		})
+	},
+	forget: {
+		args: { mac: '' },
+		call: guarded(function(req) {
+			stats.forget(st, req.args.mac);
+
+			return { ok: true };
+		})
+	},
+	save: {
+		call: guarded(function() {
+			stats.save(st, cfg.settings.persist_path);
+
+			return { ok: true };
+		})
+	}
+});
+
+signal('SIGTERM', shutdown);
+signal('SIGINT', shutdown);
+signal('SIGHUP', () => { cfg_mtime = null; reload_config(); });
+
+refresh_presence(sys.time());
+
+let timer = null;
+
+timer = uloop.timer(st.interval * 1000, function() {
+	try {
+		tick();
+	}
+	catch (e) {
+		log(`sampling error: ${e.message}\n${e.stacktrace?.[0]?.context ?? ''}`);
+	}
+
+	timer.set(st.interval * 1000);
+});
+
+uloop.run();
