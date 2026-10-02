@@ -76,7 +76,8 @@ define Package/wrtpilot/postinst
 /etc/init.d/uhttpd reload
 /etc/init.d/wrtpilotd enable
 /usr/sbin/wrtpilot apply --quiet
-/etc/init.d/wrtpilotd restart
+/etc/init.d/wrtpilotd stop 2>/dev/null
+/etc/init.d/wrtpilotd start
 exit 0
 endef
 

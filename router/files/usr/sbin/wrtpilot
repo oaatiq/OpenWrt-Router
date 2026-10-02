@@ -67,7 +67,8 @@ function set_password(pw) {
 	c.set('rpcd', 'wrtpilot', 'password', hash);
 	c.commit('rpcd');
 	fs.unlink(INITIAL_PW);
-	sys.run([ '/etc/init.d/rpcd', 'reload' ]);
+	// no rpcd reload: rpcd reads the logins at each login, and a reload
+	// (re-exec) would cut off the API call that runs this (app setup)
 	print('Password updated.\n');
 
 	return 0;

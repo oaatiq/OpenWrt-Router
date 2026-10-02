@@ -99,12 +99,13 @@ while time.time() < deadline and rc is None:
 
 if rc != 0:
     sys.exit(f'installer failed or timed out (rc={rc!r})')
+sid = login()                      # the package reloaded rpcd
 after = read(sid, CRONTAB)
 print(f'crontab after the job: {after!r} (before: {before!r})', flush=True)
 if after is not None and MARKER in after:
     sys.exit('the job did not remove itself from the crontab')
 
-sid = login()                      # ACLs are granted at login: see the package's
+sid = login()                      # ACLs are granted at login: get the package's
 pw = (read(sid, '/etc/wrtpilot/initial_password') or '').strip()
 if not pw:
     pw = 'App' + secrets.token_hex(8)
