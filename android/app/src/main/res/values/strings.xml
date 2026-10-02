@@ -108,7 +108,7 @@
     <string name="cert_changed_title">The certificate has changed</string>
     <string name="cert_changed_body">The router presents a different certificate than the one you trusted. This is normal after a reset or reinstall — otherwise someone may be intercepting the connection. Only continue if you know why it changed.</string>
     <string name="cert_fingerprint">SHA-256 fingerprint</string>
-    <string name="cert_verify_hint">To compare, run on the router: openssl x509 -in /etc/uhttpd.crt -noout -fingerprint -sha256</string>
+    <string name="cert_verify_hint">To compare, run this on the router: wrtpilot fingerprint</string>
     <string name="cert_trust">Trust</string>
     <string name="check_connected">Connected!</string>
     <string name="check_title">What this router supports</string>
@@ -121,7 +121,7 @@
     <string name="check_offload_action">Turn off</string>
     <string name="check_shaping_exact">Per-device speed limits: precise</string>
     <string name="check_shaping_coarse">Per-device speed limits: approximate</string>
-    <string name="check_shaping_hint">Install tc-full and kmod-ifb on the router for precise limits.</string>
+    <string name="check_shaping_hint">Install tc-tiny, kmod-sched-core and kmod-ifb on the router for precise limits.</string>
     <string name="check_sqm_yes">Smart Queue (SQM) available</string>
     <string name="check_sqm_no">Smart Queue (SQM) not installed</string>
     <string name="check_sqm_hint">Optional: install sqm-scripts to reduce lag when the connection is busy.</string>
@@ -242,7 +242,7 @@
     <string name="limit_speed">Speed limit</string>
     <string name="limit_off">No limit</string>
     <string name="limit_summary">↓ %1$s · ↑ %2$s</string>
-    <string name="limit_coarse_hint">This router applies approximate limits (install tc-full and kmod-ifb for precise ones).</string>
+    <string name="limit_coarse_hint">This router applies approximate limits (install tc-tiny, kmod-sched-core and kmod-ifb for precise ones).</string>
     <string name="quota">Daily data limit</string>
     <string name="quota_off">No daily limit</string>
     <string name="quota_summary">%1$s per day · %2$s used today</string>

@@ -41,6 +41,10 @@ jobs:
       - name: Lint
         run: ./gradlew :app:lintDebug
 
+      - name: Show lint issues
+        if: failure()
+        run: cat app/build/intermediates/lint_intermediate_text_report/debug/lintReportDebug/lint-results-debug.txt || true
+
       - name: Build APKs
         run: ./gradlew :app:assembleDebug :app:assembleRelease
 

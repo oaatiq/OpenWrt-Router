@@ -126,7 +126,7 @@
     <string name="cert_changed_title">تغيّرت الشهادة</string>
     <string name="cert_changed_body">يقدّم الراوتر شهادة مختلفة عن التي وثقت بها. هذا طبيعي بعد إعادة الضبط أو إعادة التثبيت، وإلا فقد يكون هناك من يعترض الاتصال. لا تتابع إلا إذا كنت تعرف سبب التغيير.</string>
     <string name="cert_fingerprint">بصمة SHA-256</string>
-    <string name="cert_verify_hint">للمقارنة، شغّل على الراوتر: ⁦openssl x509 -in /etc/uhttpd.crt -noout -fingerprint -sha256⁩</string>
+    <string name="cert_verify_hint">للمقارنة، شغّل هذا الأمر على الراوتر: ⁦wrtpilot fingerprint⁩</string>
     <string name="cert_trust">ثقة</string>
     <string name="check_connected">تم الاتصال!</string>
     <string name="check_title">ما يدعمه هذا الراوتر</string>
@@ -139,7 +139,7 @@
     <string name="check_offload_action">إيقاف</string>
     <string name="check_shaping_exact">حدود السرعة لكل جهاز: دقيقة</string>
     <string name="check_shaping_coarse">حدود السرعة لكل جهاز: تقريبية</string>
-    <string name="check_shaping_hint">ثبّت ⁦tc-full⁩ و⁦kmod-ifb⁩ على الراوتر للحصول على حدود دقيقة.</string>
+    <string name="check_shaping_hint">ثبّت ⁦tc-tiny⁩ و⁦kmod-sched-core⁩ و⁦kmod-ifb⁩ على الراوتر للحصول على حدود دقيقة.</string>
     <string name="check_sqm_yes">جودة الاتصال (SQM) متاحة</string>
     <string name="check_sqm_no">جودة الاتصال (SQM) غير مثبّتة</string>
     <string name="check_sqm_hint">اختياري: ثبّت ⁦sqm-scripts⁩ لتقليل التأخير عندما يكون الاتصال مزدحمًا.</string>
@@ -272,7 +272,7 @@
     <string name="limit_speed">حد السرعة</string>
     <string name="limit_off">بدون حد</string>
     <string name="limit_summary">↓ %1$s · ↑ %2$s</string>
-    <string name="limit_coarse_hint">يطبّق هذا الراوتر حدودًا تقريبية (ثبّت ⁦tc-full⁩ و⁦kmod-ifb⁩ للحصول على حدود دقيقة).</string>
+    <string name="limit_coarse_hint">يطبّق هذا الراوتر حدودًا تقريبية (ثبّت ⁦tc-tiny⁩ و⁦kmod-sched-core⁩ و⁦kmod-ifb⁩ للحصول على حدود دقيقة).</string>
     <string name="quota">حد البيانات اليومي</string>
     <string name="quota_off">بدون حد يومي</string>
     <string name="quota_summary">%1$s يوميًا · استُهلك %2$s اليوم</string>

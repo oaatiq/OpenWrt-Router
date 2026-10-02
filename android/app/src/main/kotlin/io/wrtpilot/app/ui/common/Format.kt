@@ -125,6 +125,6 @@ fun durationText(context: Context, seconds: Long): String {
 }
 
 /** Keeps IPs / MACs / host names left-to-right inside RTL text (Unicode isolate). */
-fun ltr(text: String): String = "⁦$text⁩"
+fun ltr(text: String): String = "\u2066$text\u2069"
 
 fun nowSeconds(): Long = System.currentTimeMillis() / 1000

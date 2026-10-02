@@ -111,7 +111,7 @@
     <string name="cert_changed_title">Le certificat a changé</string>
     <string name="cert_changed_body">Le routeur présente un certificat différent de celui que vous avez approuvé. C’est normal après une réinitialisation ou une réinstallation ; sinon, quelqu’un intercepte peut-être la connexion. Ne continuez que si vous savez pourquoi il a changé.</string>
     <string name="cert_fingerprint">Empreinte SHA-256</string>
-    <string name="cert_verify_hint">Pour comparer, lancez sur le routeur : openssl x509 -in /etc/uhttpd.crt -noout -fingerprint -sha256</string>
+    <string name="cert_verify_hint">Pour comparer, lancez sur le routeur : wrtpilot fingerprint</string>
     <string name="cert_trust">Faire confiance</string>
     <string name="check_connected">Connecté !</string>
     <string name="check_title">Ce que ce routeur prend en charge</string>
@@ -124,7 +124,7 @@
     <string name="check_offload_action">Désactiver</string>
     <string name="check_shaping_exact">Limites de débit par appareil : précises</string>
     <string name="check_shaping_coarse">Limites de débit par appareil : approximatives</string>
-    <string name="check_shaping_hint">Installez tc-full et kmod-ifb sur le routeur pour des limites précises.</string>
+    <string name="check_shaping_hint">Installez tc-tiny, kmod-sched-core et kmod-ifb sur le routeur pour des limites précises.</string>
     <string name="check_sqm_yes">File intelligente (SQM) disponible</string>
     <string name="check_sqm_no">File intelligente (SQM) non installée</string>
     <string name="check_sqm_hint">Facultatif : installez sqm-scripts pour réduire la latence quand la connexion est chargée.</string>
@@ -251,7 +251,7 @@
     <string name="limit_speed">Limite de débit</string>
     <string name="limit_off">Aucune limite</string>
     <string name="limit_summary">↓ %1$s · ↑ %2$s</string>
-    <string name="limit_coarse_hint">Ce routeur applique des limites approximatives (installez tc-full et kmod-ifb pour des limites précises).</string>
+    <string name="limit_coarse_hint">Ce routeur applique des limites approximatives (installez tc-tiny, kmod-sched-core et kmod-ifb pour des limites précises).</string>
     <string name="quota">Limite de données par jour</string>
     <string name="quota_off">Pas de limite quotidienne</string>
     <string name="quota_summary">%1$s par jour · %2$s utilisés aujourd’hui</string>
