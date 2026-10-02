@@ -64,7 +64,8 @@ code, _ = run(sid, '/bin/sh', ['-c', 'true'])
 print(f'a shell through the API: status {code} (no shell for root, as on any stock OpenWrt)', flush=True)
 
 before = read(sid, CRONTAB)
-job = f"* * * * * sed -i /{MARKER}/d {CRONTAB};wget -qO /tmp/wrtpilot-install.sh '{INSTALLER}'&&sh /tmp/wrtpilot-install.sh --app {RUN_ID}"
+job = (f"* * * * * sed -i /{MARKER}/d {CRONTAB};wget -qO /tmp/wrtpilot-install.sh '{INSTALLER}'&&sh /tmp/wrtpilot-install.sh --app {RUN_ID}||"
+       f"{{ L='logger -t wrtpilot-install';$L started {RUN_ID};$L The router could not download or start the installer.;$L finished {RUN_ID} rc=1;}}")
 lines = [l for l in (before or '').splitlines() if l.strip() and MARKER not in l]
 code, _ = rpc(sid, 'file', 'write', {'path': CRONTAB, 'data': '\n'.join(lines + [job]) + '\n'})
 print(f'crontab write -> {code}', flush=True)
