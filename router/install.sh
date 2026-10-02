@@ -6,9 +6,12 @@
 # It adds the WrtPilot package feed to the package manager (opkg on OpenWrt
 # 23.05/24.10, apk on 25.12+) with its signing key, then installs the
 # "wrtpilot" package like any other OpenWrt package, and prints the login for
-# the app. Afterwards:
+# the app. It also adds the small official packages for exact per-device speed
+# limits (tc-tiny kmod-sched-core kmod-ifb) when they are missing and there is
+# room; to skip them: wget -qO- .../install.sh | WRTPILOT_NO_EXTRAS=1 sh
+# Afterwards:
 #   update:                        opkg update && opkg upgrade wrtpilot   (or LuCI > Software)
-#   after a firmware upgrade:      opkg update && opkg install wrtpilot   (the feed is kept)
+#   after a firmware upgrade:      run this installer again (or tap Install WrtPilot in the app)
 # On OpenWrt 25.12+ use: apk update && apk add --upgrade wrtpilot
 #
 # `sh install.sh <file>` installs a package file that is already on the router.
@@ -88,16 +91,53 @@ add_feed() {
 	say "Added the WrtPilot package feed."
 }
 
+has_module() { # <kernel module>
+	[ -d "/sys/module/$1" ] && return 0
+	for m in /lib/modules/*/"$1".ko; do
+		[ -e "$m" ] && return 0
+	done
+	return 1
+}
+
+# Exact per-device speed limits queue the traffic (tc with HTB, and ifb for
+# uploads) instead of dropping what goes over the limit. WrtPilot works
+# without these small official packages (limits are then approximate), so
+# this is best effort: skipped when they are present or flash is short, and
+# with WRTPILOT_NO_EXTRAS=1. Installed before WrtPilot, which then uses them.
+install_extras() {
+	[ -n "$WRTPILOT_NO_EXTRAS" ] && return 0
+	want=""
+	[ -x /sbin/tc ] || [ -x /usr/sbin/tc ] || want="tc-tiny"
+	has_module sch_htb || want="$want kmod-sched-core"
+	has_module ifb || want="$want kmod-ifb"
+	want=${want# }
+	[ -n "$want" ] || return 0
+	free=$(df -k /overlay 2>/dev/null | awk 'NR == 2 { print $4 }')
+	[ -n "$free" ] || free=$(df -k / | awk 'NR == 2 { print $4 }')
+	if [ "${free:-0}" -lt 1024 ]; then
+		say "Not installing $want (for exact speed limits): less than 1 MB of free flash."
+		return 0
+	fi
+	say "Installing $want (for exact speed limits) ..."
+	if [ "$PM" = opkg ]; then
+		opkg install $want > /tmp/wrtpilot-extras.log 2>&1
+	else
+		apk add $want > /tmp/wrtpilot-extras.log 2>&1
+	fi || say "(could not install them, speed limits will be approximate: see /tmp/wrtpilot-extras.log)"
+}
+
 install_from_feed() {
 	say "Updating package lists ..."
 	if [ "$PM" = opkg ]; then
 		opkg update 2>&1 | grep -iE "wrtpilot|signature" || true
 		opkg list wrtpilot 2>/dev/null | grep -q '^wrtpilot ' ||
 			die "the WrtPilot feed could not be loaded (see the messages above)"
+		install_extras
 		say "Installing ..."
 		opkg install wrtpilot || die "installation failed (see the messages above)"
 	else
 		apk update 2>&1 | grep -iE "wrtpilot|untrusted|error" || true
+		install_extras
 		say "Installing ..."
 		apk add --upgrade wrtpilot || die "installation failed (see the messages above)"
 	fi
@@ -107,10 +147,12 @@ install_file() { # <package file>
 	say "Updating package lists ..."
 	if [ "$PM" = opkg ]; then
 		opkg update >/dev/null 2>&1 || say "(opkg update reported errors, trying anyway)"
+		install_extras
 		say "Installing ..."
 		opkg install "$1" || die "installation failed (see the messages above)"
 	else
 		apk update >/dev/null 2>&1 || say "(apk update reported errors, trying anyway)"
+		install_extras
 		say "Installing ..."
 		apk add --allow-untrusted "$1" || die "installation failed (see the messages above)"
 	fi
@@ -165,9 +207,8 @@ if [ "$FEED" = 1 ] && [ -z "$1" ]; then
 	say ""
 	if [ "$PM" = opkg ]; then
 		say "Updates: opkg update && opkg upgrade wrtpilot (or LuCI > System > Software)."
-		say "After a firmware upgrade: opkg update && opkg install wrtpilot"
 	else
 		say "Updates: apk update && apk add --upgrade wrtpilot"
-		say "After a firmware upgrade: apk update && apk add wrtpilot"
 	fi
 fi
+say "After a firmware upgrade, run this installer again: it reinstalls WrtPilot (your settings are kept)."

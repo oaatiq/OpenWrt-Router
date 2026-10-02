@@ -71,6 +71,7 @@ def main():
     caps = st.get('capabilities', {})
     print(f'     capabilities: {caps}')
     check(caps.get('nftset') is not None, 'capabilities reported')
+    check(caps.get('tc') is True, 'exact speed limits available (tc + HTB, added by the installer)')
 
     print('== clients / live')
     cl = call(sid, 'clients')
@@ -98,6 +99,7 @@ def main():
     check(b.get('ok') is not False, 'block a device for 10 minutes')
     r = call(sid, 'set_limit', {'mac': FAKE_MAC, 'dl_kbps': 2000, 'ul_kbps': 500})
     check(r.get('ok') is not False, f"speed limit (coarse={r.get('coarse')})")
+    check(r.get('coarse') is False, 'the limit is shaped (queued), not policed')
     call(sid, 'unblock', {'mac': FAKE_MAC})
     call(sid, 'set_limit', {'mac': FAKE_MAC, 'dl_kbps': 0, 'ul_kbps': 0})
     call(sid, 'delete_group', {'id': gid})

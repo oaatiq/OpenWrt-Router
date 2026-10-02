@@ -49,12 +49,12 @@ From then on WrtPilot is managed like any other OpenWrt package:
 | | OpenWrt 23.05 / 24.10 | OpenWrt 25.12+ |
 | --- | --- | --- |
 | Update | `opkg update && opkg upgrade wrtpilot`, or LuCI › System › Software › Updates | `apk update && apk add --upgrade wrtpilot` |
-| After a firmware upgrade | `opkg update && opkg install wrtpilot` | `apk update && apk add wrtpilot` |
+| After a firmware upgrade | run the installer again, or tap **Install WrtPilot** in the app | same |
 
 A firmware upgrade keeps the feed, the key, your WrtPilot settings and the app
-login, but (like for every package you installed yourself) the package itself
-has to be installed again with the command above; the app then works exactly
-as before.
+login. But like every package you installed yourself, the package itself (and
+the speed-limit packages) must be installed again. Run the installer again
+for that; the app then works exactly as before.
 
 ### Adding the feed by hand
 
@@ -160,14 +160,14 @@ out of it.
 
 | Feature | Install | Without it |
 | --- | --- | --- |
-| Precise per-device speed limits | `tc-tiny kmod-sched-core kmod-ifb` | limits are approximate (policing) |
+| Precise per-device speed limits | `tc-tiny kmod-sched-core kmod-ifb`: **added by the installer** when missing and there is 1 MB of free flash (skip with `WRTPILOT_NO_EXTRAS=1`) | limits are approximate: traffic over the limit is dropped instead of queued, so speed is jumpy |
 | Smart Queue (less lag when busy) | `sqm-scripts` (and `luci-app-sqm` if you like) | the Smart Queue screen explains how to install it |
 | Complete website blocking | `dnsmasq-full` (replaces `dnsmasq`) | blocking works through DNS only |
 | Kick devices off the Wi‑Fi | `hostapd` with ubus support (default on images with Wi‑Fi) | "Kick off the Wi‑Fi" is unavailable; internet blocking still works |
 
 ```sh
 opkg update
-opkg install tc-tiny kmod-sched-core kmod-ifb sqm-scripts
+opkg install sqm-scripts
 opkg remove dnsmasq && opkg install dnsmasq-full
 ```
 
