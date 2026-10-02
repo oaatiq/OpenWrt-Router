@@ -4,12 +4,14 @@
 # the API smoke test against it from the host.
 #
 # Usage: router/tests/qemu/run.sh <wrtpilot .ipk or .apk> [openwrt-version]
-#        router/tests/qemu/run.sh online [openwrt-version]   (published installer)
+#        router/tests/qemu/run.sh online [openwrt-version]   (published installer, over SSH)
+#        router/tests/qemu/run.sh app [openwrt-version]      (published installer, through the
+#                                                             router API like the app's button)
 # Needs: qemu-system-x86_64, curl, ssh, python3 (KVM is used when available)
 set -eu
 
 PKG="$1"
-[ "$PKG" = online ] || PKG="$(realpath "$PKG")"
+case "$PKG" in online|app) ;; *) PKG="$(realpath "$PKG")" ;; esac
 VERSION="${2:-23.05.6}"
 HERE="$(cd "$(dirname "$0")" && pwd)"
 WORK="${WORK:-$(mktemp -d)}"
@@ -66,6 +68,9 @@ if [ "$PKG" = online ]; then
 	echo "== install with the published one-line installer"
 	ssh_r 'wget -qO- https://github.com/oaatiq/OpenWrt-Router/releases/download/router-latest/install.sh | sh'
 	ssh_r 'grep -h wrtpilot /etc/opkg/customfeeds.conf /etc/apk/repositories.d/customfeeds.list 2>/dev/null || echo "(no feed configured)"'
+elif [ "$PKG" = app ]; then
+	echo "== install through the router API with the root login, like the app"
+	python3 "$HERE/app_install.py" "http://127.0.0.1:$HTTP_PORT/ubus" ""   # fresh OpenWrt: empty root password
 else
 	echo "== install $(basename "$PKG") with install.sh"
 	case "$PKG" in

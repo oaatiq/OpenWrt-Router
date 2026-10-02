@@ -9,11 +9,13 @@ import io.wrtpilot.app.ui.common.UiText
 import io.wrtpilot.app.ui.common.uiText
 import io.wrtpilot.core.data.db.RouterEntity
 import io.wrtpilot.core.data.repo.RouterRepository
+import io.wrtpilot.core.network.AgentInstaller
 import io.wrtpilot.core.network.ApiError
 import io.wrtpilot.core.network.Credentials
 import io.wrtpilot.core.network.RouterEndpoint
 import io.wrtpilot.core.network.WrtPilotApi
 import io.wrtpilot.core.network.model.Status
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -22,6 +24,12 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 enum class FormStep { FORM, CHECKING, RESULT }
+
+/** Installing the router agent from the app (root login). */
+sealed interface InstallState {
+    data class Running(val log: String = "") : InstallState
+    data class Failed(val message: UiText, val log: String = "") : InstallState
+}
 
 data class RouterFormState(
     val editing: Boolean = false,
@@ -43,7 +51,16 @@ data class RouterFormState(
     val status: Status? = null,
     val busy: Boolean = false,
     val done: Boolean = false,
+    val install: InstallState? = null,
 ) {
+    /** The router answered but has no WrtPilot yet (or it is being installed). */
+    val agentMissing: Boolean
+        get() = install != null || (error as? UiText.Error)?.error == ApiError.AgentMissing
+
+    /** Only root can install software through the router's API. */
+    val canInstall: Boolean
+        get() = username == "root" && install !is InstallState.Running
+
     val canConnect: Boolean
         get() = address.isNotBlank() && username.isNotBlank() && (password.isNotEmpty() || hasSavedPassword) && !busy
 }
@@ -110,7 +127,7 @@ class RouterFormViewModel @Inject constructor(
             return
         }
         // the user may have typed "https://…": reflect what was parsed
-        _state.update { it.copy(https = ep.https, step = FormStep.CHECKING, error = null, busy = true) }
+        _state.update { it.copy(https = ep.https, step = FormStep.CHECKING, error = null, install = null, busy = true) }
 
         viewModelScope.launch {
             val api = routers.probe(ep, credentials(s))
@@ -135,6 +152,39 @@ class RouterFormViewModel @Inject constructor(
             }
         }
     }
+
+    /**
+     * Installs WrtPilot through the router's API with the root login entered
+     * in the form, then continues with the restricted "wrtpilot" login: the
+     * root password is used for this step only and never saved.
+     */
+    fun installAgent() {
+        val s = _state.value
+        val ep = endpoint(s) ?: return
+        _state.update { it.copy(install = InstallState.Running(), error = null, busy = true) }
+        viewModelScope.launch {
+            val installer = AgentInstaller(routers.probe(ep, credentials(s)).ubus)
+            try {
+                installer.start()
+                val login = installer.awaitLogin { log ->
+                    _state.update { it.copy(install = InstallState.Running(log)) }
+                }
+                _state.update { it.copy(username = login.username, password = login.password, install = null, busy = false) }
+                connect()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: AgentInstaller.NotPermitted) {
+                installFailed(uiText(R.string.agent_install_needs_root))
+            } catch (e: AgentInstaller.Failed) {
+                installFailed(uiText(R.string.agent_install_failed), AgentInstaller.tail(e.log))
+            } catch (e: Exception) {
+                installFailed(UiText.Error(e))
+            }
+        }
+    }
+
+    private fun installFailed(message: UiText, log: String = "") =
+        _state.update { it.copy(install = InstallState.Failed(message, log), busy = false) }
 
     fun trustCertificate() {
         val fp = _state.value.certificatePrompt ?: return

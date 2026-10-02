@@ -51,8 +51,10 @@ off or the agent crashes, and they survive reboots and `fw4 reload`.
 
 ## Getting started
 
-1. **Install the agent on the router** (OpenWrt 23.05, 24.10 or 25.12): see
-   [docs/INSTALL.md](docs/INSTALL.md). In short:
+1. **Install the agent on the router** (OpenWrt 23.05, 24.10 or 25.12). The
+   easiest way is from the app: log in with the router's root password and tap
+   **Install WrtPilot**. From a computer instead (see
+   [docs/INSTALL.md](docs/INSTALL.md)):
 
    ```sh
    ssh root@192.168.1.1

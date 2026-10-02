@@ -10,7 +10,16 @@ This takes about five minutes. You need SSH access to the router as `root`
 - About 150 KB of free flash for WrtPilot itself, plus its dependencies
   (rpcd, uhttpd and ucode are already present on images with LuCI).
 
-## Quick install (recommended)
+## Easiest: from the app
+
+In the app tap **Add my router** and log in with the router's **root** user
+and password (the same as for LuCI). If WrtPilot is not installed yet, the app
+offers **Install WrtPilot**: it runs the installer below on the router through
+the router's own API, shows its progress, then switches to the restricted
+`wrtpilot` login. The root password is used for this step only and is not
+saved. The router needs internet access.
+
+## Quick install from a computer
 
 On a computer connected to the router, open a terminal (PowerShell on
 Windows, Terminal on macOS/Linux) and run:

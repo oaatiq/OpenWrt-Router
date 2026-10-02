@@ -137,6 +137,12 @@
     <string name="agent_missing_title">Installez d’abord WrtPilot sur le routeur</string>
     <string name="agent_missing_body">L’application a bien joint votre routeur, mais le paquet WrtPilot n’y est pas encore installé. Sur un ordinateur relié au routeur, ouvrez un terminal et lancez ces deux commandes (la première demande le mot de passe root du routeur) :</string>
     <string name="agent_missing_after">Elle installe tout et affiche un identifiant (utilisateur « wrtpilot »). Saisissez-le ici à la place de root, puis touchez Se connecter.</string>
+    <string name="agent_install_auto_body">L’application peut l’installer pour vous maintenant avec cet identifiant root. Il ne sert qu’à l’installation : l’application passe ensuite à l’identifiant limité « wrtpilot » et ne garde pas le mot de passe root. Le routeur doit avoir accès à Internet.</string>
+    <string name="agent_install_needs_root">Pour l’installer depuis l’application, saisissez ci-dessus l’utilisateur root du routeur et son mot de passe (les mêmes que pour LuCI).</string>
+    <string name="agent_install_button">Installer WrtPilot</string>
+    <string name="agent_installing">Installation de WrtPilot sur le routeur… Cela prend environ une minute.</string>
+    <string name="agent_install_failed">L’installation a échoué. Messages du routeur :</string>
+    <string name="agent_install_manual">Ou installez-le depuis un ordinateur</string>
     <string name="copy_command">Copier la commande</string>
     <string name="copied">Copié</string>
 

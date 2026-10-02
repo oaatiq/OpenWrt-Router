@@ -210,14 +210,16 @@ jobs:
           fi
 
   verify:
-    name: Published install (OpenWrt ${{ matrix.release }})
-    # runs the one-line installer from the release, exactly as users do
+    name: Published install, ${{ matrix.method }} (OpenWrt ${{ matrix.release }})
+    # installs from the release exactly as users do: the one-line installer
+    # over SSH, and the app's "Install WrtPilot" button (router API, root login)
     needs: publish
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
         release: ['23.05.6', '25.12.5']
+        method: [online, app]
     steps:
       - uses: actions/checkout@v7
 
@@ -235,11 +237,11 @@ jobs:
           WORK: ${{ runner.temp }}/qemu
         run: |
           mkdir -p "$WORK"
-          router/tests/qemu/run.sh online "${{ matrix.release }}"
+          router/tests/qemu/run.sh ${{ matrix.method }} "${{ matrix.release }}"
 
       - name: Upload console log
         if: failure()
         uses: actions/upload-artifact@v7
         with:
-          name: qemu-console-online-${{ matrix.release }}
+          name: qemu-console-${{ matrix.method }}-${{ matrix.release }}
           path: ${{ runner.temp }}/qemu/console.log

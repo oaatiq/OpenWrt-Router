@@ -134,6 +134,12 @@
     <string name="agent_missing_title">Install WrtPilot on the router first</string>
     <string name="agent_missing_body">The app reached your router, but the WrtPilot package is not installed on it yet. On a computer connected to the router, open a terminal and run these two commands (the first asks for the router’s root password):</string>
     <string name="agent_missing_after">It installs everything and prints a login (user “wrtpilot”). Enter that login here instead of root, then tap Connect.</string>
+    <string name="agent_install_auto_body">The app can install it for you now with this root login. It is used only for the installation: the app then switches to the limited “wrtpilot” login and does not keep the root password. The router needs internet access.</string>
+    <string name="agent_install_needs_root">To install it from the app, enter the router’s root user and password above (the same as for LuCI).</string>
+    <string name="agent_install_button">Install WrtPilot</string>
+    <string name="agent_installing">Installing WrtPilot on the router… This takes about a minute.</string>
+    <string name="agent_install_failed">The installation failed. The router’s messages:</string>
+    <string name="agent_install_manual">Or install it from a computer</string>
     <string name="copy_command">Copy command</string>
     <string name="copied">Copied</string>
 

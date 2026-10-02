@@ -24,6 +24,7 @@ import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.ContentCopy
+import androidx.compose.material.icons.rounded.Download
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material.icons.rounded.Router
@@ -73,11 +74,9 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.wrtpilot.app.R
-import io.wrtpilot.app.ui.common.UiText
 import io.wrtpilot.app.ui.common.asString
 import io.wrtpilot.app.ui.common.ltr
 import io.wrtpilot.app.ui.theme.LocalStatusColors
-import io.wrtpilot.core.network.ApiError
 import io.wrtpilot.core.network.Tls
 import io.wrtpilot.core.network.model.Status
 import kotlinx.coroutines.delay
@@ -247,10 +246,10 @@ private fun ConnectionForm(state: RouterFormState, vm: RouterFormViewModel) {
     )
 
     val error = state.error
-    if (error is UiText.Error && error.error == ApiError.AgentMissing) {
-        // the router answered but has no WrtPilot yet: explain how to install it
+    if (state.agentMissing) {
+        // the router answered but has no WrtPilot yet: install it from here or from a computer
         Spacer(Modifier.height(12.dp))
-        InstallAgentCard(address = state.address)
+        InstallAgentCard(state = state, onInstall = vm::installAgent)
     } else if (error != null) {
         Spacer(Modifier.height(12.dp))
         Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)) {
@@ -307,16 +306,8 @@ const val AGENT_INSTALL_COMMAND =
 
 /** Shown when the router works but the WrtPilot package is not installed on it. */
 @Composable
-private fun InstallAgentCard(address: String) {
-    val clipboard = LocalClipboardManager.current
-    val uri = LocalUriHandler.current
-    var copied by remember { mutableStateOf(false) }
-    LaunchedEffect(copied) {
-        if (copied) {
-            delay(2_000)
-            copied = false
-        }
-    }
+private fun InstallAgentCard(state: RouterFormState, onInstall: () -> Unit) {
+    val install = state.install
     Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer)) {
         Column(Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -329,51 +320,125 @@ private fun InstallAgentCard(address: String) {
                 )
             }
             Spacer(Modifier.height(8.dp))
-            Text(
-                stringResource(R.string.agent_missing_body),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onTertiaryContainer,
-            )
-            Spacer(Modifier.height(8.dp))
-            Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHighest)) {
-                Column(Modifier.padding(12.dp)) {
+            when (install) {
+                is InstallState.Running -> InstallProgress(install.log)
+                else -> {
                     Text(
-                        ltr("ssh root@" + address.ifBlank { "192.168.1.1" }),
-                        fontFamily = FontFamily.Monospace,
-                        style = MaterialTheme.typography.bodySmall,
+                        stringResource(if (state.username == "root") R.string.agent_install_auto_body else R.string.agent_install_needs_root),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onTertiaryContainer,
                     )
-                    Spacer(Modifier.height(4.dp))
-                    Text(
-                        ltr(AGENT_INSTALL_COMMAND),
-                        fontFamily = FontFamily.Monospace,
-                        style = MaterialTheme.typography.bodySmall,
-                    )
+                    if (install is InstallState.Failed) {
+                        Spacer(Modifier.height(8.dp))
+                        Text(install.message.asString(), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error)
+                        if (install.log.isNotBlank()) LogText(install.log)
+                    }
+                    Spacer(Modifier.height(12.dp))
+                    Button(
+                        onClick = onInstall,
+                        enabled = state.canInstall,
+                        modifier = Modifier.fillMaxWidth().height(52.dp),
+                    ) {
+                        Icon(Icons.Rounded.Download, contentDescription = null)
+                        Spacer(Modifier.width(8.dp))
+                        Text(stringResource(R.string.agent_install_button))
+                    }
+                    Spacer(Modifier.height(16.dp))
+                    ManualInstall(state.address)
                 }
             }
-            Spacer(Modifier.height(8.dp))
+        }
+    }
+}
+
+@Composable
+private fun InstallProgress(log: String) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        CircularProgressIndicator(Modifier.size(24.dp), strokeWidth = 3.dp)
+        Spacer(Modifier.width(12.dp))
+        Text(
+            stringResource(R.string.agent_installing),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onTertiaryContainer,
+        )
+    }
+    if (log.isNotBlank()) LogText(log)
+}
+
+@Composable
+private fun LogText(log: String) {
+    Spacer(Modifier.height(8.dp))
+    Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHighest)) {
+        Text(
+            ltr(log),
+            fontFamily = FontFamily.Monospace,
+            style = MaterialTheme.typography.bodySmall,
+            modifier = Modifier.padding(12.dp).fillMaxWidth(),
+        )
+    }
+}
+
+/** The same installation from a computer, for logins that cannot install (or as a fallback). */
+@Composable
+private fun ManualInstall(address: String) {
+    val clipboard = LocalClipboardManager.current
+    val uri = LocalUriHandler.current
+    var copied by remember { mutableStateOf(false) }
+    LaunchedEffect(copied) {
+        if (copied) {
+            delay(2_000)
+            copied = false
+        }
+    }
+    Text(
+        stringResource(R.string.agent_install_manual),
+        style = MaterialTheme.typography.titleSmall,
+        color = MaterialTheme.colorScheme.onTertiaryContainer,
+    )
+    Spacer(Modifier.height(4.dp))
+    Text(
+        stringResource(R.string.agent_missing_body),
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onTertiaryContainer,
+    )
+    Spacer(Modifier.height(8.dp))
+    Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHighest)) {
+        Column(Modifier.padding(12.dp)) {
             Text(
-                stringResource(R.string.agent_missing_after),
+                ltr("ssh root@" + address.ifBlank { "192.168.1.1" }),
+                fontFamily = FontFamily.Monospace,
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onTertiaryContainer,
             )
             Spacer(Modifier.height(4.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                FilledTonalButton(onClick = {
-                    clipboard.setText(AnnotatedString(AGENT_INSTALL_COMMAND))
-                    copied = true
-                }) {
-                    Icon(
-                        if (copied) Icons.Rounded.Check else Icons.Rounded.ContentCopy,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp),
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    Text(stringResource(if (copied) R.string.copied else R.string.copy_command))
-                }
-                TextButton(onClick = { uri.openUri(INSTALL_GUIDE_URL) }) {
-                    Text(stringResource(R.string.install_guide))
-                }
-            }
+            Text(
+                ltr(AGENT_INSTALL_COMMAND),
+                fontFamily = FontFamily.Monospace,
+                style = MaterialTheme.typography.bodySmall,
+            )
+        }
+    }
+    Spacer(Modifier.height(8.dp))
+    Text(
+        stringResource(R.string.agent_missing_after),
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onTertiaryContainer,
+    )
+    Spacer(Modifier.height(4.dp))
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        FilledTonalButton(onClick = {
+            clipboard.setText(AnnotatedString(AGENT_INSTALL_COMMAND))
+            copied = true
+        }) {
+            Icon(
+                if (copied) Icons.Rounded.Check else Icons.Rounded.ContentCopy,
+                contentDescription = null,
+                modifier = Modifier.size(18.dp),
+            )
+            Spacer(Modifier.width(8.dp))
+            Text(stringResource(if (copied) R.string.copied else R.string.copy_command))
+        }
+        TextButton(onClick = { uri.openUri(INSTALL_GUIDE_URL) }) {
+            Text(stringResource(R.string.install_guide))
         }
     }
 }

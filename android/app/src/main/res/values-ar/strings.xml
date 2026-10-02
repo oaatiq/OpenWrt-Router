@@ -152,6 +152,12 @@
     <string name="agent_missing_title">ثبّت WrtPilot على الراوتر أولًا</string>
     <string name="agent_missing_body">وصل التطبيق إلى الراوتر، لكن حزمة WrtPilot غير مثبّتة عليه بعد. على حاسوب متصل بالراوتر، افتح الطرفية وشغّل هذين الأمرين (يطلب الأول كلمة مرور root للراوتر):</string>
     <string name="agent_missing_after">يثبّت كل شيء ويعرض بيانات دخول (المستخدم «⁦wrtpilot⁩»). أدخلها هنا بدلًا من root، ثم اضغط اتصال.</string>
+    <string name="agent_install_auto_body">يمكن للتطبيق تثبيته لك الآن باستخدام بيانات دخول root هذه. تُستخدم للتثبيت فقط: ينتقل التطبيق بعدها إلى بيانات الدخول المحدودة «⁦wrtpilot⁩» ولا يحتفظ بكلمة مرور root. يحتاج الراوتر إلى اتصال بالإنترنت.</string>
+    <string name="agent_install_needs_root">لتثبيته من التطبيق، أدخل أعلاه المستخدم root للراوتر وكلمة مروره (نفسها المستخدمة في LuCI).</string>
+    <string name="agent_install_button">تثبيت WrtPilot</string>
+    <string name="agent_installing">جارٍ تثبيت WrtPilot على الراوتر… يستغرق ذلك دقيقة تقريبًا.</string>
+    <string name="agent_install_failed">فشل التثبيت. رسائل الراوتر:</string>
+    <string name="agent_install_manual">أو ثبّته من حاسوب</string>
     <string name="copy_command">نسخ الأمر</string>
     <string name="copied">تم النسخ</string>
 
