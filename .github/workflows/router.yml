@@ -129,3 +129,48 @@ jobs:
         with:
           name: qemu-console-${{ matrix.release }}
           path: ${{ runner.temp }}/qemu/console.log
+
+  publish:
+    name: Publish router package
+    # main only, and only once the packages passed on real OpenWrt
+    if: github.ref == 'refs/heads/main'
+    needs: [test, qemu]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: wrtpilot-openwrt-*
+          path: pkg
+
+      - name: Publish to the "router-latest" release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          out="$RUNNER_TEMP/release"
+          mkdir -p "$out"
+          # PKGARCH:=all: one .ipk serves 23.05 and 24.10, the .apk serves 25.12+
+          cp pkg/wrtpilot-openwrt-23.05.6/wrtpilot_*.ipk "$out/wrtpilot-router-openwrt23-24.ipk"
+          cp pkg/wrtpilot-openwrt-25.12.5/wrtpilot-*.apk "$out/wrtpilot-router-openwrt25.apk"
+          cp router/install.sh "$out/install.sh"
+          ls -l "$out"
+          version=$(sed -n 's/^PKG_VERSION:=//p' router/Makefile)-r$(sed -n 's/^PKG_RELEASE:=//p' router/Makefile)
+          notes="WrtPilot router package ${version}, built from \`main\` at ${GITHUB_SHA::7} and tested on OpenWrt 23.05, 24.10 and 25.12.
+
+          **Install or update** — on the router (SSH as root), run:
+
+          \`\`\`
+          wget -qO- https://github.com/${GITHUB_REPOSITORY}/releases/download/router-latest/install.sh | sh
+          \`\`\`
+
+          It picks the right file for your OpenWrt version and prints the login for the app.
+          Manual install: see [docs/INSTALL.md](https://github.com/${GITHUB_REPOSITORY}/blob/main/docs/INSTALL.md).
+
+          The phone app is in the [latest](https://github.com/${GITHUB_REPOSITORY}/releases/tag/latest) release."
+          gh release delete router-latest --repo "$GITHUB_REPOSITORY" --yes --cleanup-tag || true
+          gh release create router-latest "$out"/* --repo "$GITHUB_REPOSITORY" \
+            --target "$GITHUB_SHA" --prerelease \
+            --title "Router package (${version})" --notes "$notes"

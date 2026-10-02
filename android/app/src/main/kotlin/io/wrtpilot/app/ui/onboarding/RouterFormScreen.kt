@@ -21,9 +21,12 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.CheckCircle
+import androidx.compose.material.icons.rounded.ContentCopy
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.Lock
+import androidx.compose.material.icons.rounded.Router
 import androidx.compose.material.icons.rounded.Visibility
 import androidx.compose.material.icons.rounded.VisibilityOff
 import androidx.compose.material.icons.rounded.WarningAmber
@@ -33,6 +36,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -49,13 +53,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -65,11 +73,14 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.wrtpilot.app.R
+import io.wrtpilot.app.ui.common.UiText
 import io.wrtpilot.app.ui.common.asString
 import io.wrtpilot.app.ui.common.ltr
 import io.wrtpilot.app.ui.theme.LocalStatusColors
+import io.wrtpilot.core.network.ApiError
 import io.wrtpilot.core.network.Tls
 import io.wrtpilot.core.network.model.Status
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -235,13 +246,18 @@ private fun ConnectionForm(state: RouterFormState, vm: RouterFormViewModel) {
         modifier = Modifier.fillMaxWidth(),
     )
 
-    state.error?.let {
+    val error = state.error
+    if (error is UiText.Error && error.error == ApiError.AgentMissing) {
+        // the router answered but has no WrtPilot yet: explain how to install it
+        Spacer(Modifier.height(12.dp))
+        InstallAgentCard(address = state.address)
+    } else if (error != null) {
         Spacer(Modifier.height(12.dp))
         Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)) {
             Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Rounded.WarningAmber, contentDescription = null, tint = MaterialTheme.colorScheme.onErrorContainer)
                 Spacer(Modifier.width(12.dp))
-                Text(it.asString(), color = MaterialTheme.colorScheme.onErrorContainer, style = MaterialTheme.typography.bodyMedium)
+                Text(error.asString(), color = MaterialTheme.colorScheme.onErrorContainer, style = MaterialTheme.typography.bodyMedium)
             }
         }
     }
@@ -283,6 +299,83 @@ private fun ConnectionForm(state: RouterFormState, vm: RouterFormViewModel) {
         }
     }
     Spacer(Modifier.height(24.dp))
+}
+
+/** One-line installer for the router agent (see router/install.sh). */
+const val AGENT_INSTALL_COMMAND =
+    "wget -qO- https://github.com/oaatiq/OpenWrt-Router/releases/download/router-latest/install.sh | sh"
+
+/** Shown when the router works but the WrtPilot package is not installed on it. */
+@Composable
+private fun InstallAgentCard(address: String) {
+    val clipboard = LocalClipboardManager.current
+    val uri = LocalUriHandler.current
+    var copied by remember { mutableStateOf(false) }
+    LaunchedEffect(copied) {
+        if (copied) {
+            delay(2_000)
+            copied = false
+        }
+    }
+    Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer)) {
+        Column(Modifier.padding(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Rounded.Router, contentDescription = null, tint = MaterialTheme.colorScheme.onTertiaryContainer)
+                Spacer(Modifier.width(12.dp))
+                Text(
+                    stringResource(R.string.agent_missing_title),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onTertiaryContainer,
+                )
+            }
+            Spacer(Modifier.height(8.dp))
+            Text(
+                stringResource(R.string.agent_missing_body),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onTertiaryContainer,
+            )
+            Spacer(Modifier.height(8.dp))
+            Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHighest)) {
+                Column(Modifier.padding(12.dp)) {
+                    Text(
+                        ltr("ssh root@" + address.ifBlank { "192.168.1.1" }),
+                        fontFamily = FontFamily.Monospace,
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        ltr(AGENT_INSTALL_COMMAND),
+                        fontFamily = FontFamily.Monospace,
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                }
+            }
+            Spacer(Modifier.height(8.dp))
+            Text(
+                stringResource(R.string.agent_missing_after),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onTertiaryContainer,
+            )
+            Spacer(Modifier.height(4.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                FilledTonalButton(onClick = {
+                    clipboard.setText(AnnotatedString(AGENT_INSTALL_COMMAND))
+                    copied = true
+                }) {
+                    Icon(
+                        if (copied) Icons.Rounded.Check else Icons.Rounded.ContentCopy,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp),
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(if (copied) R.string.copied else R.string.copy_command))
+                }
+                TextButton(onClick = { uri.openUri(INSTALL_GUIDE_URL) }) {
+                    Text(stringResource(R.string.install_guide))
+                }
+            }
+        }
+    }
 }
 
 @Composable

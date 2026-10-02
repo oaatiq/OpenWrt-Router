@@ -134,6 +134,12 @@
     <string name="check_nftset_no">Blocage de sites : DNS uniquement (installez dnsmasq-full pour un blocage complet)</string>
     <string name="check_finish">Terminer</string>
 
+    <string name="agent_missing_title">Installez d’abord WrtPilot sur le routeur</string>
+    <string name="agent_missing_body">L’application a bien joint votre routeur, mais le paquet WrtPilot n’y est pas encore installé. Sur un ordinateur relié au routeur, ouvrez un terminal et lancez ces deux commandes (la première demande le mot de passe root du routeur) :</string>
+    <string name="agent_missing_after">Elle installe tout et affiche un identifiant (utilisateur « wrtpilot »). Saisissez-le ici à la place de root, puis touchez Se connecter.</string>
+    <string name="copy_command">Copier la commande</string>
+    <string name="copied">Copié</string>
+
     <!-- Dashboard -->
     <string name="internet_online">Internet fonctionne</string>
     <string name="internet_offline">Internet est coupé</string>

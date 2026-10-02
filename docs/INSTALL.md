@@ -10,24 +10,40 @@ This takes about five minutes. You need SSH access to the router as `root`
 - About 150 KB of free flash for WrtPilot itself, plus its dependencies
   (rpcd, uhttpd and ucode are already present on images with LuCI).
 
+## Quick install (recommended)
+
+On a computer connected to the router, open a terminal (PowerShell on
+Windows, Terminal on macOS/Linux) and run:
+
+```sh
+ssh root@192.168.1.1          # your router's address; enter the root password
+wget -qO- https://github.com/oaatiq/OpenWrt-Router/releases/download/router-latest/install.sh | sh
+```
+
+The script downloads the right package for your OpenWrt version, installs it
+with its dependencies and prints the login to enter in the app (user
+`wrtpilot`). Run the same command again later to update. Then continue with
+[HTTPS](#4-turn-on-https-recommended) and
+[adding the router in the app](#5-add-the-router-in-the-app).
+
+The steps below do the same by hand.
+
 ## 1. Get the package
 
-Download the package for your OpenWrt version from the project's
-[Releases](https://github.com/oaatiq/OpenWrt-Router/releases), or from the
-latest successful *Router agent* run under
-[Actions](https://github.com/oaatiq/OpenWrt-Router/actions) (artifact
-`wrtpilot-openwrt-<version>`):
+Download the package for your OpenWrt version from the
+[router-latest](https://github.com/oaatiq/OpenWrt-Router/releases/tag/router-latest)
+release:
 
 | OpenWrt | File |
 | --- | --- |
-| 23.05, 24.10 | `wrtpilot_<version>_all.ipk` |
-| 25.12 and later | `wrtpilot-<version>.apk` |
+| 23.05, 24.10 | `wrtpilot-router-openwrt23-24.ipk` |
+| 25.12 and later | `wrtpilot-router-openwrt25.apk` (an OpenWrt package, not the phone app) |
 
 Copy it to the router (`-O` makes recent OpenSSH clients use the protocol the
 router understands):
 
 ```sh
-scp -O wrtpilot_*.ipk root@192.168.1.1:/tmp/
+scp -O wrtpilot-router-openwrt23-24.ipk root@192.168.1.1:/tmp/
 ```
 
 ## 2. Install
@@ -36,10 +52,10 @@ scp -O wrtpilot_*.ipk root@192.168.1.1:/tmp/
 ssh root@192.168.1.1
 
 # OpenWrt 23.05 / 24.10
-opkg update && opkg install /tmp/wrtpilot_*.ipk
+opkg update && opkg install /tmp/wrtpilot-router-openwrt23-24.ipk
 
 # OpenWrt 25.12 and later
-apk update && apk add --allow-untrusted /tmp/wrtpilot-*.apk
+apk update && apk add --allow-untrusted /tmp/wrtpilot-router-openwrt25.apk
 ```
 
 The package installs its dependencies from the OpenWrt feeds and then:

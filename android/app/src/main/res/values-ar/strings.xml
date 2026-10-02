@@ -149,6 +149,12 @@
     <string name="check_nftset_no">حظر المواقع: عبر DNS فقط (ثبّت ⁦dnsmasq-full⁩ لحظر كامل)</string>
     <string name="check_finish">تم</string>
 
+    <string name="agent_missing_title">ثبّت WrtPilot على الراوتر أولًا</string>
+    <string name="agent_missing_body">وصل التطبيق إلى الراوتر، لكن حزمة WrtPilot غير مثبّتة عليه بعد. على حاسوب متصل بالراوتر، افتح الطرفية وشغّل هذين الأمرين (يطلب الأول كلمة مرور root للراوتر):</string>
+    <string name="agent_missing_after">يثبّت كل شيء ويعرض بيانات دخول (المستخدم «⁦wrtpilot⁩»). أدخلها هنا بدلًا من root، ثم اضغط اتصال.</string>
+    <string name="copy_command">نسخ الأمر</string>
+    <string name="copied">تم النسخ</string>
+
     <!-- Dashboard -->
     <string name="internet_online">الإنترنت يعمل</string>
     <string name="internet_offline">الإنترنت مقطوع</string>

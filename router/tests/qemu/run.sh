@@ -59,19 +59,14 @@ for i in $(seq 1 60); do
 	sleep 2
 done
 
-echo "== install $(basename "$PKG")"
+echo "== install $(basename "$PKG") with install.sh"
 case "$PKG" in
-*.apk)	# OpenWrt 25.12+: apk; CI packages are unsigned
-	ssh_r 'cat > /tmp/wrtpilot.apk' < "$PKG"
-	ssh_r 'apk update >/dev/null && apk add --allow-untrusted /tmp/wrtpilot.apk'
-	REMOVE='apk del wrtpilot'
-	;;
-*)
-	ssh_r 'cat > /tmp/wrtpilot.ipk' < "$PKG"
-	ssh_r 'opkg update >/dev/null && opkg install /tmp/wrtpilot.ipk'
-	REMOVE='opkg remove wrtpilot'
-	;;
+*.apk)	REMOTE=/tmp/wrtpilot.apk; REMOVE='apk del wrtpilot' ;;	# OpenWrt 25.12+
+*)	REMOTE=/tmp/wrtpilot.ipk; REMOVE='opkg remove wrtpilot' ;;
 esac
+ssh_r "cat > $REMOTE" < "$PKG"
+ssh_r 'cat > /tmp/install.sh' < "$HERE/../../install.sh"
+ssh_r "sh /tmp/install.sh $REMOTE"
 ssh_r "wrtpilot passwd '$PASSWORD' && wrtpilot credentials | head -1"
 ssh_r 'pgrep -f wrtpilotd >/dev/null && echo "wrtpilotd running"'
 ssh_r 'wrtpilot fingerprint || true'   # needs HTTPS (default on 24.10+ images)

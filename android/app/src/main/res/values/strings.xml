@@ -131,6 +131,12 @@
     <string name="check_nftset_no">Website blocking: DNS only (install dnsmasq-full for complete blocking)</string>
     <string name="check_finish">Done</string>
 
+    <string name="agent_missing_title">Install WrtPilot on the router first</string>
+    <string name="agent_missing_body">The app reached your router, but the WrtPilot package is not installed on it yet. On a computer connected to the router, open a terminal and run these two commands (the first asks for the router’s root password):</string>
+    <string name="agent_missing_after">It installs everything and prints a login (user “wrtpilot”). Enter that login here instead of root, then tap Connect.</string>
+    <string name="copy_command">Copy command</string>
+    <string name="copied">Copied</string>
+
     <!-- Dashboard -->
     <string name="internet_online">Internet is up</string>
     <string name="internet_offline">Internet is down</string>

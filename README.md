@@ -55,9 +55,11 @@ off or the agent crashes, and they survive reboots and `fw4 reload`.
    [docs/INSTALL.md](docs/INSTALL.md). In short:
 
    ```sh
-   opkg update && opkg install /tmp/wrtpilot_*.ipk    # apk add --allow-untrusted on 25.12
-   wrtpilot credentials                               # login for the app
+   ssh root@192.168.1.1
+   wget -qO- https://github.com/oaatiq/OpenWrt-Router/releases/download/router-latest/install.sh | sh
    ```
+
+   It installs the package and prints the login for the app.
 
 2. **Install the app**: download
    [wrtpilot.apk](https://github.com/oaatiq/OpenWrt-Router/releases/download/latest/wrtpilot.apk)
