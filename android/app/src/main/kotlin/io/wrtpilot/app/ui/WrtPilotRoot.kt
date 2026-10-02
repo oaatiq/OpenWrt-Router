@@ -1,6 +1,7 @@
 package io.wrtpilot.app.ui
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -150,7 +151,8 @@ private fun MainNav(
             startDestination = HomeRoute,
             modifier = Modifier
                 .padding(bottom = padding.calculateBottomPadding())
-                .consumeWindowInsets(padding),
+                // only the bottom bar is applied here: each screen's top bar pads for the status bar
+                .consumeWindowInsets(PaddingValues(bottom = padding.calculateBottomPadding())),
         ) {
             composable<HomeRoute> {
                 DashboardScreen(

@@ -89,10 +89,8 @@ fun TrafficChart(
     val rateFormatter = remember(locale) {
         CartesianValueFormatter { _, value, _ -> formatRate(context, value.toLong(), locale) }
     }
-    val labelFormatter = remember(labels) {
-        CartesianValueFormatter { _, value, _ -> labels.getOrNull(value.toInt()) ?: " " }
-    }
     val spacing = (rx.size / 4).coerceAtLeast(1)
+    val labelFormatter = remember(labels, spacing) { distinctLabels(labels, spacing) }
 
     val chart = rememberCartesianChart(
         rememberLineCartesianLayer(lineProvider = LineCartesianLayer.LineProvider.series(download, upload)),
@@ -224,4 +222,14 @@ private fun LegendItem(color: Color, label: String) {
         Spacer(Modifier.width(6.dp))
         Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
+}
+
+/**
+ * Axis labels every [spacing] points; a label equal to the previous one is
+ * left blank (minute-resolution clock labels on a few minutes of data).
+ */
+private fun distinctLabels(labels: List<String>, spacing: Int) = CartesianValueFormatter { _, value, _ ->
+    val i = value.toInt()
+    val label = labels.getOrNull(i) ?: return@CartesianValueFormatter " "
+    if (i >= spacing && labels.getOrNull(i - spacing) == label) " " else label
 }

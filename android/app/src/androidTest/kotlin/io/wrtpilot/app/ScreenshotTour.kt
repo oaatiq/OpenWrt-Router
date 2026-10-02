@@ -40,7 +40,6 @@ class ScreenshotTour {
 
     @Test
     fun tour() {
-        setLocale("en")
         launch()
 
         // onboarding
@@ -98,11 +97,9 @@ class ScreenshotTour {
         click(R.string.tab_settings)
         click(R.string.theme)
         click(R.string.theme_light)
-        scenario.close()
 
         // Arabic (right-to-left)
-        setLocale("ar")
-        launch()
+        switchLanguage("ar")
         waitFor(R.string.dash_top_devices, 30_000)
         shot("13-home-arabic", settle = 4_000)
         click(R.string.tab_devices)
@@ -117,15 +114,13 @@ class ScreenshotTour {
         clickText("Kids")
         waitFor(R.string.allowed_hours)
         shot("16-family-group-arabic")
-        scenario.close()
 
         // French
-        setLocale("fr")
-        launch()
+        switchLanguage("fr")
         waitFor(R.string.dash_top_devices, 30_000)
         shot("17-home-french", settle = 4_000)
+        switchLanguage("")
         scenario.close()
-        setLocale("")
     }
 
     // ------------------------------------------------------------------
@@ -139,12 +134,20 @@ class ScreenshotTour {
         scenario = ActivityScenario.launch(MainActivity::class.java)
     }
 
-    private fun setLocale(tag: String) {
-        instrumentation.runOnMainSync {
+    /**
+     * Like the app's language setting. AppCompat only applies it while one of
+     * its activities is alive, so this runs on the open activity, then the
+     * app is restarted in the new language.
+     */
+    private fun switchLanguage(tag: String) {
+        scenario.onActivity {
             AppCompatDelegate.setApplicationLocales(
                 if (tag.isEmpty()) LocaleListCompat.getEmptyLocaleList() else LocaleListCompat.forLanguageTags(tag)
             )
         }
+        SystemClock.sleep(2_000)
+        scenario.close()
+        launch()
     }
 
     /** Text of a string resource in the activity's current language. */

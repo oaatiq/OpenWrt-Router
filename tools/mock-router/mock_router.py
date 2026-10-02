@@ -179,7 +179,7 @@ class Router:
         self.groups['kids'] = {
             'id': 'kids', 'name': 'Kids', 'dns_filter': 'cloudflare_family', 'dns_custom': [],
             'safesearch': True, 'blocklist': ['tiktok.com'], 'schedule_enabled': True,
-            'schedule': ['mon,tue,wed,thu,sun 07:00-20:30', 'fri,sat 08:00-22:00'],
+            'schedule': ['mon,tue,wed,thu,sun 07:00-21:00', 'fri,sat 08:00-22:00'],
             'dl_limit_kbps': 0, 'ul_limit_kbps': 0, 'paused_until': 0,
         }
         self.devices['c4:5d:83:88:99:04']['group'] = 'kids'
@@ -196,6 +196,7 @@ class Router:
             'group': '', 'blocked': '', 'blocked_until': 0, 'paused_until': 0,
             'dl_limit_kbps': 0, 'ul_limit_kbps': 0, 'daily_quota_mb': 0, 'quota_action': '',
             'quota_blocked_until': 0, 'quota_notified': 0,
+            'level': random.uniform(0.3, 1.0),   # current activity, drifts smoothly
             'rx': deque([0] * len(self.ring_ts), maxlen=RING), 'tx': deque([0] * len(self.ring_ts), maxlen=RING),
             'today_rx': 0, 'today_tx': 0,
         }
@@ -280,10 +281,15 @@ class Router:
                 elif not d['online'] and d['profile'][0] > 0 and random.random() < 0.004:
                     d['online'] = True
                 rx = tx = 0
-                if d['online'] and not self.restricted(d, t) and random.random() < busy:
+                if d['online'] and not self.restricted(d, t):
+                    # smooth random walk with occasional bursts, like real traffic
+                    d['level'] = min(1.6, max(0.05, d['level'] + random.gauss(0, 0.12)))
+                    if random.random() < 0.03:
+                        d['level'] = random.uniform(0.8, 1.6)
                     dl, ul = d['profile']
-                    rx = int(dl * 1e6 * random.uniform(0.1, 1.8))
-                    tx = int(ul * 1e6 * random.uniform(0.1, 1.8))
+                    k = d['level'] * (0.5 + busy / 2)
+                    rx = int(dl * 1e6 * k * random.uniform(0.85, 1.15))
+                    tx = int(ul * 1e6 * k * random.uniform(0.85, 1.15))
                     for g in (d, self.groups.get(d['group'], {})):
                         if g.get('dl_limit_kbps'):
                             rx = min(rx, g['dl_limit_kbps'] * 1000)
