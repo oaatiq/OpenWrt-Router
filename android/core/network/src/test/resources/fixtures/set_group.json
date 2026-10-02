@@ -1,0 +1,23 @@
+{
+  "group": {
+    "allowed_now": false,
+    "blocklist": [],
+    "dl_limit_kbps": 0,
+    "dns_custom": [],
+    "dns_filter": "off",
+    "id": "kids",
+    "members": [
+      "02:00:00:00:00:11"
+    ],
+    "name": "Kids",
+    "next_change": 1790990760,
+    "paused_until": 0,
+    "safesearch": false,
+    "schedule": [
+      "sun,mon,tue,wed,thu,fri,sat 01:26-02:26"
+    ],
+    "schedule_enabled": true,
+    "ul_limit_kbps": 0
+  },
+  "ok": true
+}

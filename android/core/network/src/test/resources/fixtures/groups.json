@@ -1,0 +1,38 @@
+{
+  "dns_filters": [
+    "off",
+    "adguard_local",
+    "cleanbrowsing_family",
+    "cloudflare_family",
+    "adguard_family",
+    "opendns_family",
+    "custom"
+  ],
+  "groups": [
+    {
+      "allowed_now": true,
+      "blocklist": [
+        "blocked.example"
+      ],
+      "dl_limit_kbps": 0,
+      "dns_custom": [
+        "10.99.0.1"
+      ],
+      "dns_filter": "custom",
+      "id": "kids",
+      "members": [
+        "02:00:00:00:00:11"
+      ],
+      "name": "Kids",
+      "next_change": 0,
+      "paused_until": 0,
+      "safesearch": true,
+      "schedule": [
+        "sun,mon,tue,wed,thu,fri,sat 01:26-02:26"
+      ],
+      "schedule_enabled": false,
+      "ul_limit_kbps": 0
+    }
+  ],
+  "ok": true
+}

@@ -91,7 +91,7 @@ def main():
     call(sid, 'resume', {'group': gid})
     gl = call(sid, 'groups')
     me = next((x for x in gl.get('groups', []) if x.get('id') == gid), {})
-    check(not me.get('paused'), 'group resumed')
+    check(me.get('paused_until', 1) == 0, 'group resumed')
 
     print('== devices')
     b = call(sid, 'block', {'mac': FAKE_MAC, 'mode': 'internet', 'duration_s': 600})

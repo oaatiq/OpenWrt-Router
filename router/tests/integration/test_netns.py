@@ -154,7 +154,33 @@ class Rpc:
             return {'ok': False, 'error': 'rpc', 'message': json.dumps(r)}
         if res[0] != 0:
             return {'ok': False, 'error': f'ubus_{res[0]}'}
-        return res[1] if len(res) > 1 else {}
+        data = res[1] if len(res) > 1 else {}
+        save_fixture(method, args or {}, data)
+        return data
+
+
+def save_fixture(method, args, data):
+    """WRTPILOT_FIXTURES=<dir>: keep the first successful reply of each call
+    (the app's contract tests decode them with its models)."""
+    out = os.environ.get('WRTPILOT_FIXTURES')
+    if not out or data.get('ok') is False:
+        return
+    name = method
+    if method == 'history':
+        name = 'history_all' if args.get('mac') == '*' else f"history_{args.get('resolution', 'minute')}"
+    elif method == 'live' and args.get('devices') is False:
+        name = 'live_totals'
+    elif method == 'pause' and args.get('until'):
+        name = f"pause_{args['until']}"
+    path = Path(out) / f'{name}.json'
+    if (method in ('clients', 'groups', 'events') and not fixture_has_items(data)) or path.exists():
+        return
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(data, indent=2, sort_keys=True) + '\n')
+
+
+def fixture_has_items(data):
+    return any(isinstance(v, list) and v for v in data.values())
 
 
 def dns_query(ns, server, name, qtype=1):

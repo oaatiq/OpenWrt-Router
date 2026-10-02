@@ -1,0 +1,15 @@
+{
+  "device": {
+    "blocked": "",
+    "blocked_until": 0,
+    "custom_name": "Kid laptop",
+    "daily_quota_mb": 1,
+    "dl_limit_kbps": 0,
+    "group": "",
+    "mac": "02:00:00:00:00:11",
+    "paused_until": 0,
+    "quota_action": "block",
+    "ul_limit_kbps": 0
+  },
+  "ok": true
+}

@@ -1,0 +1,45 @@
+{
+  "agent_version": "0.1.0",
+  "capabilities": {
+    "cake": false,
+    "hostapd": true,
+    "ifb": true,
+    "ip": true,
+    "nftset": true,
+    "sqm": false,
+    "tc": true
+  },
+  "coarse_limiting": false,
+  "collector": {
+    "interval": 1,
+    "running": true
+  },
+  "enabled": true,
+  "hostname": "wrtpilot-test",
+  "last_apply": {
+    "error": null,
+    "ok": true,
+    "ts": 1790947549,
+    "warnings": []
+  },
+  "model": "WrtPilot netns test router",
+  "offload": {
+    "hardware": false,
+    "software": false
+  },
+  "offload_warning": false,
+  "ok": true,
+  "openwrt_description": "",
+  "openwrt_version": "unknown",
+  "self_macs": [
+    "02:00:00:00:00:11"
+  ],
+  "target": "",
+  "time": 1790947551,
+  "timezone": "UTC",
+  "uptime": 8163,
+  "wan": {
+    "interface": null,
+    "up": false
+  }
+}

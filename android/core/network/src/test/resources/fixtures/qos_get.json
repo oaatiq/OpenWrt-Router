@@ -1,0 +1,14 @@
+{
+  "available": false,
+  "dl_kbps": 0,
+  "enabled": false,
+  "interface": null,
+  "ok": true,
+  "preset": "default",
+  "presets": [
+    "default",
+    "gaming",
+    "streaming"
+  ],
+  "ul_kbps": 0
+}

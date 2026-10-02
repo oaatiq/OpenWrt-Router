@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Common actions -->
     <string name="add">Ajouter</string>
     <string name="apply">Appliquer</string>
@@ -138,17 +138,20 @@
     <string name="internet_online">Internet fonctionne</string>
     <string name="internet_offline">Internet est coupé</string>
     <string name="wan_uptime">Connecté depuis %1$s</string>
-    <plurals name="count_online">
+    <!-- label under the number, which is shown separately -->
+    <plurals name="count_online" tools:ignore="ImpliedQuantity">
         <item quantity="one">En ligne</item>
         <item quantity="many">En ligne</item>
         <item quantity="other">En ligne</item>
     </plurals>
-    <plurals name="count_blocked">
+    <!-- label under the number, which is shown separately -->
+    <plurals name="count_blocked" tools:ignore="ImpliedQuantity">
         <item quantity="one">Bloqué</item>
         <item quantity="many">Bloqués</item>
         <item quantity="other">Bloqués</item>
     </plurals>
-    <plurals name="count_paused">
+    <!-- label under the number, which is shown separately -->
+    <plurals name="count_paused" tools:ignore="ImpliedQuantity">
         <item quantity="one">En pause</item>
         <item quantity="many">En pause</item>
         <item quantity="other">En pause</item>
@@ -422,7 +425,7 @@
     <string name="dynamic_color_desc">Adapter les couleurs de l’application à votre fond d’écran</string>
     <string name="poll_interval">Actualisation en direct</string>
     <string name="poll_interval_desc">Fréquence de mise à jour des écrans en direct quand l’application est ouverte. Plus c’est rapide, plus la batterie est sollicitée.</string>
-    <plurals name="every_seconds">
+    <plurals name="every_seconds" tools:ignore="ImpliedQuantity">
         <item quantity="one">Toutes les secondes</item>
         <item quantity="many">Toutes les %d secondes</item>
         <item quantity="other">Toutes les %d secondes</item>

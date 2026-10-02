@@ -40,6 +40,12 @@ android {
         buildConfig = true
     }
 
+    lint {
+        // print every issue in the build log (CI)
+        textReport = true
+        textOutput = file("stdout")
+    }
+
     packaging {
         resources.excludes += setOf("/META-INF/{AL2.0,LGPL2.1}", "/META-INF/versions/9/previous-compilation-data.bin")
     }

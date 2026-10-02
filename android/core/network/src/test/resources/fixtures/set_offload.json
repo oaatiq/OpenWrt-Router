@@ -1,0 +1,7 @@
+{
+  "offload": {
+    "hardware": false,
+    "software": true
+  },
+  "ok": true
+}

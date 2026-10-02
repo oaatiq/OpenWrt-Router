@@ -413,7 +413,15 @@ function module_available(name) {
 	if (sys.exists(`/sys/module/${name}`))
 		return true;
 
-	return length(sys.glob(`/lib/modules/*/${name}.ko`)) > 0;
+	// OpenWrt keeps modules flat in /lib/modules/<version>/
+	if (length(sys.glob(`/lib/modules/*/${name}.ko`)) > 0)
+		return true;
+
+	// other distributions: nested and often compressed, listed in modules.dep
+	let release = trim(sys.readfile('/proc/sys/kernel/osrelease') ?? '');
+	let dep = (release != '') ? sys.readfile(`/lib/modules/${release}/modules.dep`) : null;
+
+	return dep != null && index(dep, `/${name}.ko`) >= 0;
 }
 
 function dnsmasq_has_nftset() {
