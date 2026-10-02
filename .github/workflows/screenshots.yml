@@ -85,7 +85,10 @@ jobs:
             ${{ runner.temp }}/mock.log
 
       - name: Publish to the "screenshots" branch
+        # also after a failed step, with the screens captured so far
+        if: always()
         run: |
+          ls "$RUNNER_TEMP"/screenshots/*.png >/dev/null 2>&1 || { echo "no screenshots"; exit 0; }
           cd "$RUNNER_TEMP/screenshots"
           {
             echo "# WrtPilot screenshots"

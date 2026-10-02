@@ -48,7 +48,7 @@ class ScreenshotTour {
         shot("01-welcome")
         click(R.string.welcome_start)
         waitFor(R.string.form_connect)
-        type(R.string.form_name, "Home")
+        type(R.string.form_name, "Home router")  // not "Home": that is also a tab label
         type(R.string.form_address, "10.0.2.2")
         type(R.string.form_port, "8080")
         type(R.string.form_password, "wrtpilot")
