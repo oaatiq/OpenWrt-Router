@@ -20,13 +20,26 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    // Release signing: set WRTPILOT_KEYSTORE (path), WRTPILOT_KEYSTORE_PASSWORD,
+    // WRTPILOT_KEY_ALIAS and WRTPILOT_KEY_PASSWORD; otherwise the debug key is used.
+    val releaseKeystore = System.getenv("WRTPILOT_KEYSTORE")?.takeIf { it.isNotBlank() }
+    signingConfigs {
+        if (releaseKeystore != null) {
+            create("release") {
+                storeFile = file(releaseKeystore)
+                storePassword = System.getenv("WRTPILOT_KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("WRTPILOT_KEY_ALIAS")
+                keyPassword = System.getenv("WRTPILOT_KEY_PASSWORD")
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            // CI signs release builds with a keystore from secrets; local builds use the debug key
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName(if (releaseKeystore != null) "release" else "debug")
         }
     }
 

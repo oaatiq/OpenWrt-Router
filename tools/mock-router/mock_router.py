@@ -26,7 +26,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 VERSION = '0.1.0'
 INTERVAL = 2                    # seconds between live samples
-RING = 1800                     # live samples kept (1 hour)
+RING = 300                      # live samples kept (10 minutes, like the agent)
 SESSION_TIMEOUT = 300
 ANON = '0' * 32
 
