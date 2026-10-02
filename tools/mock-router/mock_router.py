@@ -276,10 +276,6 @@ class Router:
             hour = datetime.fromtimestamp(t).hour
             busy = 0.3 if hour < 7 else (1.0 if hour >= 18 else 0.6)
             for mac, d in self.devices.items():
-                if d['online'] and random.random() < 0.002:
-                    d['online'] = False
-                elif not d['online'] and d['profile'][0] > 0 and random.random() < 0.004:
-                    d['online'] = True
                 rx = tx = 0
                 if d['online'] and not self.restricted(d, t):
                     # smooth random walk with occasional bursts, like real traffic

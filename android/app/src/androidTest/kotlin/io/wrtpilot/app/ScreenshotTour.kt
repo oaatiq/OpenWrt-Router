@@ -1,6 +1,7 @@
 package io.wrtpilot.app
 
 import android.graphics.Bitmap
+import android.os.ParcelFileDescriptor
 import android.os.SystemClock
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatDelegate
@@ -187,6 +188,11 @@ class ScreenshotTour {
     private fun shot(name: String, settle: Long = 1_500) {
         compose.waitForIdle()
         SystemClock.sleep(settle)
+        // a slow CI emulator sometimes shows "<system app> isn't responding" over the app
+        val pfd = instrumentation.uiAutomation
+            .executeShellCommand("am broadcast -a android.intent.action.CLOSE_SYSTEM_DIALOGS")
+        ParcelFileDescriptor.AutoCloseInputStream(pfd).use { it.readBytes() }
+        SystemClock.sleep(500)
         val bitmap: Bitmap = instrumentation.uiAutomation.takeScreenshot()
         val dir = File(instrumentation.targetContext.getExternalFilesDir(null), "screenshots").apply { mkdirs() }
         FileOutputStream(File(dir, "$name.png")).use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
