@@ -17,8 +17,9 @@ function usage() {
 Usage: wrtpilot <command> [options]
 
   apply [--quiet] [--boot]   Regenerate firewall / shaping / DNS state from UCI
-  reset [--disable]          Remove every WrtPilot rule (lockout recovery);
-                             --disable also stops re-applying on boot
+  reset [--disable]          Remove every WrtPilot rule until the next apply
+                             (lockout recovery); --disable also keeps them
+                             off after a reboot
   unblock-all                Clear all blocks and pauses from the config
   status                     Router and agent status (JSON)
   clients                    Known devices (JSON)

@@ -751,6 +751,12 @@ def test_qos_offload_misc(c2):
     r = sh(f'{UCODE} -S {FILES}/usr/sbin/wrtpilot reset', ns='router', check_rc=False)
     tables = sh('nft list tables', ns='router').stdout
     check(r.returncode == 0 and 'wrtpilot' not in tables, 'wrtpilot reset removes all rules')
+    time.sleep(15)
+    tables = sh('nft list tables', ns='router').stdout
+    check('wrtpilot' not in tables, 'wrtpilotd does not bring the rules back after a reset')
+    sh(f'{UCODE} -S {FILES}/usr/sbin/wrtpilot apply --quiet', ns='router')
+    tables = sh('nft list tables', ns='router').stdout
+    check('wrtpilot' in tables, 'apply restores the rules after a reset')
 
 
 def main():

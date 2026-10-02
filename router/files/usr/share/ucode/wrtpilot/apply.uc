@@ -20,6 +20,9 @@ import * as wifi from 'wrtpilot.wifi';
 
 export const QUOTA_STATE = RUN_DIR + '/quota.json';
 const TC_STATE = RUN_DIR + '/tc.state';
+// present after `wrtpilot reset` until the next apply: the daemon must not
+// bring the rules back on its own (lockout recovery)
+const RESET_MARK = RUN_DIR + '/reset';
 
 // ---------------------------------------------------------------------------
 // Planning
@@ -457,6 +460,7 @@ function do_apply(opts) {
 
 	wifi.sync(p.wifi, now);
 
+	sys.unlink(RESET_MARK);
 	write_json(`${RUN_DIR}/apply.json`, { ts: now, ok: res.ok, warnings: res.warnings, error: res.error });
 
 	return res;
@@ -523,6 +527,7 @@ export function reset(opts) {
 
 	try {
 		res = do_reset(opts);
+		write_json(RESET_MARK, { ts: sys.time() });
 	}
 	catch (e) {
 		res = { ok: false, error: 'reset_failed', message: e.message };
@@ -531,6 +536,11 @@ export function reset(opts) {
 	unlock(fd);
 
 	return res;
+};
+
+// True between `wrtpilot reset` and the next explicit apply.
+export function is_reset() {
+	return fs.access(RESET_MARK) == true;
 };
 
 // Last apply result (for status reporting).

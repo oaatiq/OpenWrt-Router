@@ -47,6 +47,10 @@ function reload_config() {
 function run_apply(reason) {
 	last_apply = sys.time();
 
+	// rules were removed on purpose (`wrtpilot reset`): wait for an explicit apply
+	if (applier.is_reset())
+		return;
+
 	let r = applier.apply();
 
 	if (!r.ok)
