@@ -194,7 +194,7 @@ export function clients() {
 			ul_limit_kbps: d.ul_limit_kbps ?? 0,
 			daily_quota_mb: d.daily_quota_mb ?? 0,
 			quota_action: d.quota_action || cfg.settings.quota_action,
-			quota_exceeded: (quota_blocked[mac] ?? 0) > now || (d.daily_quota_mb > 0 && (s.today_rx ?? 0) + (s.today_tx ?? 0) >= d.daily_quota_mb * 1048576),
+			quota_exceeded: (quota_blocked[mac] ?? 0) > now || (d.daily_quota_mb > 0 && (s.today_rx ?? 0) + (s.today_tx ?? 0) >= d.daily_quota_mb * 1000000),
 			is_self: index(me, mac) >= 0,
 			random_mac: mac_is_random(mac)
 		});
@@ -218,7 +218,11 @@ export function clients() {
 
 export function live(args) {
 	let macs = filter(map(args.macs ?? [], normalize_mac), m => m != null);
-	let r = collector('live', { macs: macs, samples: int_arg(args.samples, 1, 3600) ?? 150 });
+	let r = collector('live', {
+		macs: macs,
+		samples: int_arg(args.samples, 1, 3600) ?? 150,
+		devices: args.devices !== false
+	});
 
 	return r ? ok(r) : err('collector_unavailable', 'The statistics collector (wrtpilotd) is not running');
 };
@@ -229,7 +233,9 @@ export function history(args) {
 	if (index([ 'minute', 'hour', 'day' ], res) < 0)
 		return err('invalid_argument', 'resolution must be minute, hour or day');
 
-	let mac = (args.mac == null || args.mac == '' || args.mac == 'all') ? '' : normalize_mac(args.mac);
+	// '' or 'all' = all devices summed, '*' = per device
+	let mac = (args.mac == null || args.mac == '' || args.mac == 'all') ? '' :
+		((args.mac == '*') ? '*' : normalize_mac(args.mac));
 
 	if (mac == null)
 		return err('invalid_mac');
@@ -292,7 +298,7 @@ export function set_device(args) {
 	}
 
 	if (args.daily_quota_mb != null) {
-		let q = int_arg(args.daily_quota_mb, 0, 10485760);
+		let q = int_arg(args.daily_quota_mb, 0, 10000000);
 
 		if (q == null)
 			return err('invalid_argument', 'daily_quota_mb out of range');

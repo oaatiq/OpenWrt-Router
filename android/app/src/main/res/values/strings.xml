@@ -1,0 +1,483 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name" translatable="false">WrtPilot</string>
+
+    <!-- Common actions -->
+    <string name="add">Add</string>
+    <string name="apply">Apply</string>
+    <string name="back">Back</string>
+    <string name="cancel">Cancel</string>
+    <string name="clear">Clear</string>
+    <string name="close">Close</string>
+    <string name="copy">Copy</string>
+    <string name="create">Create</string>
+    <string name="delete">Delete</string>
+    <string name="discard">Discard</string>
+    <string name="edit">Edit</string>
+    <string name="fix">Fix</string>
+    <string name="more">More</string>
+    <string name="more_options">More options</string>
+    <string name="remove">Remove</string>
+    <string name="rename">Rename</string>
+    <string name="retry">Retry</string>
+    <string name="save">Save</string>
+    <string name="search">Search</string>
+    <string name="sort">Sort</string>
+    <string name="turn_on">Turn on</string>
+    <string name="undo">Undo</string>
+    <string name="suggestions">Suggestions</string>
+    <string name="not_available">Not available</string>
+
+    <!-- Tabs -->
+    <string name="tab_home">Home</string>
+    <string name="tab_devices">Devices</string>
+    <string name="tab_family">Family</string>
+    <string name="tab_settings">Settings</string>
+
+    <!-- Units and time -->
+    <string name="unit_b">%1$s B</string>
+    <string name="unit_kb">%1$s KB</string>
+    <string name="unit_mb">%1$s MB</string>
+    <string name="unit_gb">%1$s GB</string>
+    <string name="unit_tb">%1$s TB</string>
+    <string name="unit_bps">%1$s bit/s</string>
+    <string name="unit_kbps">%1$s kbit/s</string>
+    <string name="unit_mbps">%1$s Mbit/s</string>
+    <string name="unit_gbps">%1$s Gbit/s</string>
+    <string name="unit_mbps_short">Mbit/s</string>
+    <string name="time_never">never</string>
+    <string name="time_just_now">just now</string>
+    <plurals name="time_minutes_ago">
+        <item quantity="one">%d minute ago</item>
+        <item quantity="other">%d minutes ago</item>
+    </plurals>
+    <plurals name="time_hours_ago">
+        <item quantity="one">%d hour ago</item>
+        <item quantity="other">%d hours ago</item>
+    </plurals>
+    <plurals name="time_days_ago">
+        <item quantity="one">%d day ago</item>
+        <item quantity="other">%d days ago</item>
+    </plurals>
+    <plurals name="duration_minutes">
+        <item quantity="one">%d min</item>
+        <item quantity="other">%d min</item>
+    </plurals>
+    <plurals name="duration_hours">
+        <item quantity="one">%d h</item>
+        <item quantity="other">%d h</item>
+    </plurals>
+    <string name="duration_hours_minutes">%1$s %2$s</string>
+    <string name="today">Today</string>
+    <string name="last_updated">Last updated %1$s</string>
+
+    <!-- Welcome -->
+    <string name="welcome_title">Your home network, in your pocket</string>
+    <string name="welcome_subtitle">See who is connected, control the internet for the whole family and keep the connection smooth — on your OpenWrt router.</string>
+    <string name="welcome_feature_devices">See every device and how much it uses, live</string>
+    <string name="welcome_feature_control">Block, pause or slow down any device in one tap</string>
+    <string name="welcome_feature_family">Bedtime schedules and safe browsing for kids</string>
+    <string name="welcome_feature_alerts">Get notified when a new device joins</string>
+    <string name="welcome_start">Add my router</string>
+    <string name="welcome_requirement">Needs a router running OpenWrt 23.05 or newer with the WrtPilot package installed.</string>
+    <string name="welcome_install_guide">How to install WrtPilot on the router</string>
+
+    <!-- Add / edit router -->
+    <string name="form_add_title">Add router</string>
+    <string name="form_edit_title">Edit router</string>
+    <string name="form_intro">Enter the address of your router and the app login created by WrtPilot.</string>
+    <string name="form_name">Name</string>
+    <string name="form_name_hint">Home</string>
+    <string name="form_address">Router address</string>
+    <string name="form_address_hint">For example 192.168.1.1 or router.lan</string>
+    <string name="form_port">Port</string>
+    <string name="form_username">Username</string>
+    <string name="form_password">Password</string>
+    <string name="form_password_keep">Leave empty to keep the saved password</string>
+    <string name="show_password">Show password</string>
+    <string name="hide_password">Hide password</string>
+    <string name="form_http_warning">Without HTTPS the password is sent unencrypted. Only use this on your own home network.</string>
+    <string name="form_invalid_address">Enter a valid address and port</string>
+    <string name="form_connect">Connect</string>
+    <string name="form_checking">Connecting…</string>
+    <string name="form_help_title">Where do I find the login?</string>
+    <string name="form_help_body">WrtPilot creates a dedicated login when it is installed. To see it, run this on the router:</string>
+    <string name="form_help_remote">Away from home? Use a VPN such as WireGuard or Tailscale. Never expose the router’s web interface to the internet.</string>
+    <string name="cert_title">Trust this router?</string>
+    <string name="cert_body">The router uses its own (self-signed) certificate. Check that the fingerprint below matches the router’s, then trust it. The app will only accept this exact certificate from now on.</string>
+    <string name="cert_changed_title">The certificate has changed</string>
+    <string name="cert_changed_body">The router presents a different certificate than the one you trusted. This is normal after a reset or reinstall — otherwise someone may be intercepting the connection. Only continue if you know why it changed.</string>
+    <string name="cert_fingerprint">SHA-256 fingerprint</string>
+    <string name="cert_verify_hint">To compare, run on the router: openssl x509 -in /etc/uhttpd.crt -noout -fingerprint -sha256</string>
+    <string name="cert_trust">Trust</string>
+    <string name="check_connected">Connected!</string>
+    <string name="check_title">What this router supports</string>
+    <string name="check_agent">WrtPilot agent %1$s</string>
+    <string name="check_collector">Traffic statistics are running</string>
+    <string name="check_collector_off">Not running. Restart the router or run: /etc/init.d/wrtpilotd restart</string>
+    <string name="check_offload_on">Flow offloading is on</string>
+    <string name="check_offload_off">Flow offloading is off</string>
+    <string name="check_offload_explain">Offloading skips the firewall, so per-device traffic, limits and blocking are less accurate. Turning it off is recommended.</string>
+    <string name="check_offload_action">Turn off</string>
+    <string name="check_shaping_exact">Per-device speed limits: precise</string>
+    <string name="check_shaping_coarse">Per-device speed limits: approximate</string>
+    <string name="check_shaping_hint">Install tc-full and kmod-ifb on the router for precise limits.</string>
+    <string name="check_sqm_yes">Smart Queue (SQM) available</string>
+    <string name="check_sqm_no">Smart Queue (SQM) not installed</string>
+    <string name="check_sqm_hint">Optional: install sqm-scripts to reduce lag when the connection is busy.</string>
+    <string name="check_wifi_yes">Wi‑Fi control available</string>
+    <string name="check_wifi_no">Wi‑Fi control not available — blocking uses the firewall only</string>
+    <string name="check_nftset_yes">Website blocking: complete</string>
+    <string name="check_nftset_no">Website blocking: DNS only (install dnsmasq-full for complete blocking)</string>
+    <string name="check_finish">Done</string>
+
+    <!-- Dashboard -->
+    <string name="internet_online">Internet is up</string>
+    <string name="internet_offline">Internet is down</string>
+    <string name="wan_uptime">Connected for %1$s</string>
+    <plurals name="count_online">
+        <item quantity="one">Online</item>
+        <item quantity="other">Online</item>
+    </plurals>
+    <plurals name="count_blocked">
+        <item quantity="one">Blocked</item>
+        <item quantity="other">Blocked</item>
+    </plurals>
+    <plurals name="count_paused">
+        <item quantity="one">Paused</item>
+        <item quantity="other">Paused</item>
+    </plurals>
+    <string name="dash_top_devices">Most active right now</string>
+    <string name="dash_no_traffic">No traffic right now</string>
+    <string name="dash_all_devices">All devices</string>
+    <string name="dash_family_setup_title">Set up parental controls</string>
+    <string name="dash_family_setup_body">Group the kids’ devices to pause the internet, set bedtimes and filter websites.</string>
+    <string name="dash_qos_on">Smart Queue is on</string>
+    <string name="dash_qos_off">Smart Queue is off</string>
+    <string name="dash_qos_unavailable">Smart Queue is not installed</string>
+    <string name="group_bedtime_until">Bedtime until %1$s</string>
+    <string name="group_allowed_until">Internet allowed until %1$s</string>
+    <string name="group_always_allowed">Internet allowed</string>
+    <string name="alert_offload_title">Flow offloading is on</string>
+    <string name="alert_offload_body">Device statistics, speed limits and blocking can be inaccurate while offloading is on.</string>
+    <string name="offload_dialog_title">Turn off flow offloading?</string>
+    <string name="offload_dialog_body">This makes per-device statistics and controls reliable. On very fast connections (above about 500 Mbit/s) some routers may become slower.</string>
+    <string name="offload_dialog_confirm">Turn off</string>
+    <string name="offload_disabled">Flow offloading turned off</string>
+    <string name="alert_collector_title">Traffic statistics stopped</string>
+    <string name="alert_collector_body">Live speeds and usage are not updated. Restart the router, or run /etc/init.d/wrtpilotd restart on it.</string>
+    <string name="alert_disabled_title">WrtPilot is paused on this router</string>
+    <string name="alert_disabled_body">Blocks, schedules and limits are not applied. Run “wrtpilot apply” on the router after enabling it in /etc/config/wrtpilot.</string>
+
+    <!-- Router switcher -->
+    <string name="switch_router">Switch router</string>
+    <string name="manage_routers">Manage routers</string>
+
+    <!-- Devices -->
+    <string name="search_devices">Search by name, IP or MAC</string>
+    <string name="sort_name">Name</string>
+    <string name="sort_rate">Current speed</string>
+    <string name="sort_usage">Usage today</string>
+    <string name="filter_all">All</string>
+    <string name="filter_online">Online</string>
+    <string name="filter_wifi">Wi‑Fi</string>
+    <string name="filter_wired">Wired</string>
+    <string name="filter_blocked">Blocked</string>
+    <string name="filter_paused">Paused</string>
+    <string name="devices_empty">No devices yet</string>
+    <string name="devices_empty_hint">Devices appear here as soon as they connect to the router.</string>
+    <string name="devices_no_match">No matching devices</string>
+    <string name="device_by_vendor">%1$s device</string>
+    <string name="device_private">Private device</string>
+    <string name="device_unknown">Unknown device</string>
+    <string name="this_device">This phone</string>
+    <string name="online">Online</string>
+    <string name="offline">Offline</string>
+    <string name="seen_ago">seen %1$s</string>
+    <string name="conn_wifi_24">Wi‑Fi 2.4 GHz</string>
+    <string name="conn_wifi_5">Wi‑Fi 5 GHz</string>
+    <string name="conn_wifi_6">Wi‑Fi 6 GHz</string>
+    <string name="conn_wifi">Wi‑Fi</string>
+    <string name="conn_wired">Wired</string>
+    <string name="conn_unknown">Unknown connection</string>
+    <string name="state_blocked">Blocked</string>
+    <string name="state_wifi_blocked">Blocked from Wi‑Fi</string>
+    <string name="state_paused">Paused</string>
+    <string name="state_paused_until">Paused until %1$s</string>
+    <string name="state_quota">Daily limit reached</string>
+    <string name="state_bedtime">Bedtime</string>
+    <string name="msg_blocked">%1$s is blocked</string>
+    <string name="msg_unblocked">%1$s is unblocked</string>
+    <string name="msg_paused">Internet paused for %1$s</string>
+    <string name="msg_resumed">Internet is back for %1$s</string>
+    <string name="msg_blocked_short">Blocked</string>
+    <string name="msg_unblocked_short">Unblocked</string>
+    <string name="msg_paused_short">Internet paused</string>
+    <string name="msg_resumed_short">Internet resumed</string>
+    <string name="msg_coarse_limit">Saved. This router can only apply approximate limits.</string>
+
+    <!-- Device detail -->
+    <string name="device_not_found">This device is no longer known</string>
+    <string name="section_rules">Rules</string>
+    <string name="section_details">Details</string>
+    <string name="block">Block</string>
+    <string name="unblock">Unblock</string>
+    <string name="pause">Pause</string>
+    <string name="resume">Resume</string>
+    <string name="self_device_hint">This is the phone you are using. Blocking it would cut you off from the router, so it is protected.</string>
+    <string name="live_traffic">Live traffic</string>
+    <string name="download">Download</string>
+    <string name="upload">Upload</string>
+    <string name="chart_collecting">Collecting data…</string>
+    <string name="usage">Usage</string>
+    <string name="usage_split">↓ %1$s · ↑ %2$s</string>
+    <string name="usage_offline">Saved data, the router cannot be reached</string>
+    <string name="range_24h">24 hours</string>
+    <string name="range_7d">7 days</string>
+    <string name="range_30d">30 days</string>
+    <string name="family_group">Family group</string>
+    <string name="group_none">None</string>
+    <string name="group_hint">Schedules, filters and pauses of the group apply to this device.</string>
+    <string name="open_group_rules">Open “%1$s” rules</string>
+    <string name="limit_speed">Speed limit</string>
+    <string name="limit_off">No limit</string>
+    <string name="limit_summary">↓ %1$s · ↑ %2$s</string>
+    <string name="limit_coarse_hint">This router applies approximate limits (install tc-full and kmod-ifb for precise ones).</string>
+    <string name="quota">Daily data limit</string>
+    <string name="quota_off">No daily limit</string>
+    <string name="quota_summary">%1$s per day · %2$s used today</string>
+    <string name="quota_per_day">Limit per day</string>
+    <string name="quota_notify">Just notify me</string>
+    <string name="quota_block">Block until midnight</string>
+    <string name="mac_address">MAC address</string>
+    <string name="random_mac_hint">This device uses a private (random) address. Its name may change if it forgets the network.</string>
+    <string name="ip_address">IP address</string>
+    <string name="ipv6_address">IPv6 address</string>
+    <string name="hostname">Host name</string>
+    <string name="connection">Connection</string>
+    <string name="network_name">Network</string>
+    <string name="signal">Signal</string>
+    <string name="signal_dbm">%1$s dBm</string>
+    <string name="first_seen">First seen</string>
+    <string name="last_seen">Last seen</string>
+    <string name="rename_title">Rename device</string>
+    <string name="device_name">Device name</string>
+    <string name="reset_name">Use automatic name</string>
+    <string name="forget_device">Forget device</string>
+    <string name="forget_title">Forget this device?</string>
+    <string name="forget_body">Its name, group, limits and history are removed. It will show up again as a new device if it reconnects.</string>
+
+    <!-- Block / pause sheets -->
+    <string name="block_title">Block %1$s</string>
+    <string name="block_mode_internet">Block internet</string>
+    <string name="block_mode_internet_desc">Stays on the Wi‑Fi but cannot reach the internet.</string>
+    <string name="block_mode_wifi">Kick off the Wi‑Fi</string>
+    <string name="block_mode_wifi_desc">Disconnected from the Wi‑Fi and cannot reconnect.</string>
+    <string name="block_mode_wifi_unavailable">Not available on this router.</string>
+    <string name="block_duration">For how long?</string>
+    <string name="block_until_unblocked">Until I unblock</string>
+    <string name="block_confirm">Block</string>
+    <string name="pause_device_title">Pause internet for %1$s</string>
+    <string name="pause_group_title">Pause internet for %1$s</string>
+    <string name="pause_explain">The internet comes back by itself when the time is up, even if this phone is off.</string>
+    <string name="pause_15_min">15 minutes</string>
+    <string name="pause_1_hour">1 hour</string>
+    <string name="pause_until_tomorrow">For the rest of the day</string>
+    <string name="pause_indefinitely">Until I resume</string>
+
+    <!-- Family groups -->
+    <string name="new_group">New group</string>
+    <string name="new_group_hint">For example one group per child, or one for all the kids’ devices.</string>
+    <string name="group_name">Group name</string>
+    <string name="group_name_example">Kids</string>
+    <string name="groups_empty_title">Parental controls</string>
+    <string name="groups_empty_body">Put devices in a group to manage them together:</string>
+    <string name="groups_feature_schedule">Bedtime and school-night schedules</string>
+    <string name="groups_feature_pause">Pause the internet in one tap</string>
+    <string name="groups_feature_filter">Filter adult content and block websites</string>
+    <plurals name="member_count">
+        <item quantity="one">%d device</item>
+        <item quantity="other">%d devices</item>
+    </plurals>
+    <plurals name="blocked_sites_count">
+        <item quantity="one">%d blocked site</item>
+        <item quantity="other">%d blocked sites</item>
+    </plurals>
+    <string name="feature_filter">Filtered</string>
+    <string name="safesearch">SafeSearch</string>
+    <string name="group_not_found">This group no longer exists</string>
+    <string name="internet_access">Internet access</string>
+    <string name="pause_internet">Pause internet</string>
+    <string name="resume_internet">Resume internet</string>
+    <string name="add_members_first">Add devices to the group first</string>
+    <string name="members">Devices</string>
+    <string name="no_members">No devices in this group yet</string>
+    <string name="add_devices">Add devices</string>
+    <string name="remove_from_group">Remove from group</string>
+    <string name="in_group">In “%1$s”</string>
+    <string name="schedule">Schedule</string>
+    <string name="allowed_hours">Allowed hours</string>
+    <string name="allowed_hours_on">Internet only during the highlighted hours</string>
+    <string name="allowed_hours_off">Internet allowed at any time</string>
+    <string name="schedule_hint">Highlighted hours have internet. Tap a day to change it.</string>
+    <string name="schedule_custom">This schedule was set up with minute precision:</string>
+    <string name="schedule_start_over">Replace with an hourly schedule</string>
+    <string name="schedule_no_internet">no internet</string>
+    <string name="schedule_day_hint">Internet is allowed during these hours:</string>
+    <string name="schedule_none_this_day">No internet this day</string>
+    <string name="schedule_all_day">All day</string>
+    <string name="schedule_copy_all">Copy to every day</string>
+    <string name="schedule_empty_warning">No hour is highlighted: the devices will never have internet.</string>
+    <string name="save_schedule">Save schedule</string>
+    <string name="msg_schedule_saved">Schedule saved</string>
+    <string name="preset_school">School nights</string>
+    <string name="preset_daytime">Daytime only</string>
+    <string name="preset_always">Always</string>
+    <string name="preset_clear">Clear</string>
+    <string name="content_filter">Content filter</string>
+    <string name="dns_off">No filter</string>
+    <string name="dns_off_desc">Use the router’s normal DNS.</string>
+    <string name="dns_cleanbrowsing">CleanBrowsing Family</string>
+    <string name="dns_cleanbrowsing_desc">Blocks adult content, proxies and VPNs.</string>
+    <string name="dns_cloudflare">Cloudflare for Families</string>
+    <string name="dns_cloudflare_desc">Blocks malware and adult content.</string>
+    <string name="dns_adguard">AdGuard Family</string>
+    <string name="dns_adguard_desc">Blocks ads, trackers and adult content.</string>
+    <string name="dns_opendns">OpenDNS FamilyShield</string>
+    <string name="dns_opendns_desc">Blocks adult content.</string>
+    <string name="dns_adguard_local">AdGuard Home on the router</string>
+    <string name="dns_adguard_local_desc">Uses AdGuard Home installed on the router, with your own lists.</string>
+    <string name="dns_custom">Custom DNS servers</string>
+    <string name="dns_custom_desc">Use your own filtering DNS servers.</string>
+    <string name="dns_custom_label">IP addresses, separated by commas</string>
+    <string name="safesearch_desc">Forces safe results on Google, Bing, DuckDuckGo and restricted mode on YouTube.</string>
+    <string name="filter_bypass_note">Encrypted DNS (DoH/DoT) to well-known providers is blocked for these devices so the filter cannot be bypassed easily.</string>
+    <string name="blocked_sites">Blocked websites</string>
+    <string name="blocked_sites_hint">Blocking a site also blocks all of its subdomains.</string>
+    <string name="blocked_sites_hint_dns">Blocking a site also blocks all of its subdomains. Install dnsmasq-full on the router to also block direct connections.</string>
+    <string name="speed">Speed</string>
+    <string name="group_limit">Shared speed limit</string>
+    <string name="group_limit_hint">All devices in the group share this speed.</string>
+    <string name="delete_group">Delete group</string>
+    <string name="delete_group_title">Delete “%1$s”?</string>
+    <string name="delete_group_body">Its devices keep working without these rules.</string>
+    <string name="rename_group">Rename group</string>
+
+    <!-- Smart Queue (QoS) -->
+    <string name="qos_title">Smart Queue (QoS)</string>
+    <string name="qos_explain">Smart Queue keeps calls, games and browsing smooth when someone is downloading or streaming. Set your speeds slightly below what your internet plan really gives.</string>
+    <string name="qos_explain_short">Less lag when the connection is busy</string>
+    <string name="qos_enable">Smart Queue</string>
+    <string name="qos_interface">On interface %1$s</string>
+    <string name="qos_download">Download</string>
+    <string name="qos_upload">Upload</string>
+    <string name="qos_speedtest_hint">Not sure? Run a speed test and use about 90 percent of the result.</string>
+    <string name="qos_speedtest">Speed test</string>
+    <string name="qos_preset">Optimize for</string>
+    <string name="preset_default">Balanced</string>
+    <string name="preset_default_desc">Good for most homes.</string>
+    <string name="preset_gaming">Gaming and calls</string>
+    <string name="preset_gaming_desc">Lowest lag for games and video calls.</string>
+    <string name="preset_streaming">Streaming</string>
+    <string name="preset_streaming_desc">Fair sharing between many devices watching videos.</string>
+    <string name="qos_saved_on">Smart Queue is on</string>
+    <string name="qos_saved_off">Smart Queue is off</string>
+    <string name="qos_not_installed">Smart Queue is not installed</string>
+    <string name="qos_not_installed_body">Install the sqm-scripts package on the router, then come back here:</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_router">Router</string>
+    <string name="settings_appearance">Appearance</string>
+    <string name="settings_updates">Updates</string>
+    <string name="settings_notifications">Notifications</string>
+    <string name="settings_data">Data</string>
+    <string name="settings_about">About</string>
+    <string name="settings_qos_summary">Keep the connection smooth when it is busy</string>
+    <string name="routers_title">Routers</string>
+    <plurals name="routers_active_of">
+        <item quantity="one">%1$s · %2$d router</item>
+        <item quantity="other">%1$s · %2$d routers</item>
+    </plurals>
+    <string name="router_model">Model</string>
+    <string name="router_address">Address</string>
+    <string name="openwrt_version">OpenWrt</string>
+    <string name="agent_version">WrtPilot agent</string>
+    <string name="language">Language</string>
+    <string name="language_system">System default</string>
+    <string name="theme">Theme</string>
+    <string name="theme_system">System default</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+    <string name="dynamic_color">Colors from wallpaper</string>
+    <string name="dynamic_color_desc">Match the app colors to your wallpaper</string>
+    <string name="poll_interval">Live refresh</string>
+    <string name="poll_interval_desc">How often live screens update while the app is open. Faster updates use a little more battery.</string>
+    <plurals name="every_seconds">
+        <item quantity="one">Every second</item>
+        <item quantity="other">Every %d seconds</item>
+    </plurals>
+    <string name="background_interval">Background checks</string>
+    <string name="background_interval_desc">How often the app checks the router for new devices and data limits while closed.</string>
+    <string name="every_duration">Every %1$s</string>
+    <string name="notifications_off">Notifications are turned off for WrtPilot.</string>
+    <string name="notify_new_devices">New devices</string>
+    <string name="notify_new_devices_desc">When a device connects for the first time</string>
+    <string name="notify_quota">Data limits</string>
+    <string name="notify_quota_desc">When a device reaches its daily limit</string>
+    <string name="export_csv">Export usage (CSV)</string>
+    <string name="export_csv_desc">Daily usage per device, for a spreadsheet</string>
+    <string name="export_done">Usage exported</string>
+    <string name="export_empty">Exported, but no usage history yet</string>
+    <string name="version_name">Version %1$s</string>
+    <string name="install_guide">Installation guide</string>
+    <string name="install_guide_desc">Set up WrtPilot on an OpenWrt router</string>
+    <string name="source_code">Source code</string>
+    <string name="licenses">Open-source licenses</string>
+    <string name="licenses_app">WrtPilot is free software. It is built with:</string>
+    <string name="licenses_oui">Manufacturer names come from the IEEE Registration Authority public OUI list.</string>
+
+    <!-- Routers -->
+    <string name="routers_hint">Tap a router to switch to it.</string>
+    <string name="router_active">Active</string>
+    <string name="add_router">Add router</string>
+    <string name="connection_secure">Secure connection (HTTPS)</string>
+    <string name="connection_insecure">Unencrypted connection (HTTP)</string>
+    <string name="remove_router_title">Remove “%1$s”?</string>
+    <string name="remove_router_body">It is removed from this phone only. Nothing changes on the router.</string>
+    <string name="remove_router_last">It is removed from this phone only, nothing changes on the router. You will be asked to add a router again.</string>
+
+    <!-- Notifications -->
+    <string name="channel_new_devices">New devices</string>
+    <string name="channel_new_devices_desc">A device connected to your network for the first time</string>
+    <string name="channel_quota">Data limits</string>
+    <string name="channel_quota_desc">A device reached its daily data limit</string>
+    <string name="notif_new_device_title">New device on your network</string>
+    <string name="notif_new_device_text">%1$s connected to %2$s.</string>
+    <string name="notif_quota_title">%1$s reached its daily limit</string>
+    <string name="notif_quota_text">%1$s used %2$s of %3$s today.</string>
+    <string name="notif_quota_text_blocked">%1$s used %2$s of %3$s today. Internet is blocked until midnight.</string>
+
+    <!-- Errors -->
+    <string name="error_network">Cannot reach the router. Check that you are on its network (or VPN).</string>
+    <string name="error_timeout">The router took too long to answer.</string>
+    <string name="error_untrusted_certificate">The router’s certificate is not trusted.</string>
+    <string name="error_certificate_changed">The router’s certificate has changed. Edit the router to review it.</string>
+    <string name="error_http">The router returned an unexpected error.</string>
+    <string name="error_ubus_disabled">The router’s API is not reachable. Is uhttpd-mod-ubus installed?</string>
+    <string name="error_bad_credentials">Wrong username or password.</string>
+    <string name="error_access_denied">The router refused this action. Reinstall the WrtPilot package to restore its permissions.</string>
+    <string name="error_agent_missing">WrtPilot is not installed on this router.</string>
+    <string name="error_agent_outdated">The WrtPilot package on the router is too old. Please update it.</string>
+    <string name="error_self_block">You cannot block the phone you are using.</string>
+    <string name="error_invalid_domain">This is not a valid website address.</string>
+    <string name="error_invalid_schedule">This schedule is not valid.</string>
+    <string name="error_unknown_group">This group no longer exists.</string>
+    <string name="error_sqm_missing">Smart Queue (sqm-scripts) is not installed on the router.</string>
+    <string name="error_no_wan">No internet connection was found on the router.</string>
+    <string name="error_collector">The traffic statistics service is not running on the router.</string>
+    <string name="error_apply_failed">The router could not apply the change. Nothing was changed.</string>
+    <string name="error_invalid_input">The router rejected this value.</string>
+    <string name="error_protocol">The router sent an answer the app does not understand.</string>
+    <string name="error_generic">Something went wrong. Please try again.</string>
+</resources>

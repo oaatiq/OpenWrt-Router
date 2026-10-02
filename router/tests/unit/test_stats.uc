@@ -59,6 +59,11 @@ eq(live.devices['aa:00:00:00:00:10'].rx, [ 24000, 800 ]);
 eq(live.devices['aa:00:00:00:00:99'].rx, [ 0, 0 ], 'unknown requested device gets zeros');
 eq(live.total.tx, [ 2000, 0 ]);
 
+let tot = stats.live(st, null, 2, false);
+
+eq(tot.devices, {}, 'totals only');
+eq(tot.total.rx, [ 24000, 800 ]);
+
 let snap = stats.snapshot(st, t0 + 4);
 
 eq(snap.devices['aa:00:00:00:00:10'].today_rx, 6200);
@@ -105,6 +110,16 @@ eq(ha.series[0], [ m0, 1010, 0 ], 'all devices summed');
 let hh = stats.history(st3, '', 'hour', 0, m0 + 61);
 
 eq(hh.series, [ [ m0 - m0 % 3600, 3010, 0 ] ], 'hourly aggregation');
+
+let hp = stats.history(st3, '*', 'minute', 0, m0 + 61);
+
+eq(hp.devices['cc:00:00:00:00:02'], [ [ m0, 1000, 0 ], [ m0 + 60, 2000, 0 ] ], 'per-device series');
+eq(hp.devices['cc:00:00:00:00:03'], [ [ m0, 10, 0 ] ]);
+eq(hp.series, null);
+
+let hpd = stats.history(st3, '*', 'day', 0, m0 + 61);
+
+eq(hpd.devices['cc:00:00:00:00:03'][0][1], 10, 'per-device daily');
 
 let hd = stats.history(st3, 'cc:00:00:00:00:02', 'day', 0, m0 + 61);
 

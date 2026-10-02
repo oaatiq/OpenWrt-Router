@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Router with a compass needle ("pilot"), drawn in the 66dp safe zone. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- antennas -->
+    <path android:fillColor="#FFFFFF" android:pathData="M38,40 L42,40 L42,56 L38,56 Z" />
+    <path android:fillColor="#FFFFFF" android:pathData="M66,40 L70,40 L70,56 L66,56 Z" />
+    <!-- body -->
+    <path android:fillColor="#FFFFFF"
+        android:pathData="M32,56 L76,56 A6,6 0 0,1 82,62 L82,70 A6,6 0 0,1 76,76 L32,76 A6,6 0 0,1 26,70 L26,62 A6,6 0 0,1 32,56 Z" />
+    <!-- status lights -->
+    <path android:fillColor="#1A6BB0" android:pathData="M36,64 a2.5,2.5 0 1,0 5,0 a2.5,2.5 0 1,0 -5,0 Z" />
+    <path android:fillColor="#1A6BB0" android:pathData="M45,64 a2.5,2.5 0 1,0 5,0 a2.5,2.5 0 1,0 -5,0 Z" />
+    <path android:fillColor="#4CD3A0" android:pathData="M54,64 a2.5,2.5 0 1,0 5,0 a2.5,2.5 0 1,0 -5,0 Z" />
+    <!-- signal arcs -->
+    <path android:strokeColor="#FFFFFF" android:strokeWidth="3.5" android:strokeLineCap="round"
+        android:pathData="M45,36 A12,12 0 0,1 63,36" />
+    <path android:strokeColor="#FFFFFF" android:strokeWidth="3.5" android:strokeLineCap="round"
+        android:pathData="M40,30 A19,19 0 0,1 68,30" />
+</vector>

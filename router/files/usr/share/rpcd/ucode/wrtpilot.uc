@@ -24,7 +24,7 @@ function wrap(fn) {
 const methods = {
 	status:        { call: wrap(() => api.status()) },
 	clients:       { call: wrap(() => api.clients()) },
-	live:          { args: { macs: [], samples: 0 }, call: wrap(api.live) },
+	live:          { args: { macs: [], samples: 0, devices: true }, call: wrap(api.live) },
 	history:       { args: { mac: '', resolution: '', since: 0 }, call: wrap(api.history) },
 	events:        { args: { since_id: 0 }, call: wrap(api.events) },
 

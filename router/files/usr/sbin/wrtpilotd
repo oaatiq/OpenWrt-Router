@@ -134,7 +134,7 @@ function check_quotas(now) {
 
 		let used = stats.today_usage(st, mac, now);
 
-		if (used < d.daily_quota_mb * 1048576 || st.quota_notified[today]?.[mac])
+		if (used < d.daily_quota_mb * 1000000 || st.quota_notified[today]?.[mac])
 			continue;
 
 		let action = d.quota_action || cfg.settings.quota_action;
@@ -143,7 +143,7 @@ function check_quotas(now) {
 		st.dirty = true;
 
 		stats.add_event(st, cfg.settings.persist_path, 'quota_exceeded', mac, {
-			used_mb: int(used / 1048576),
+			used_mb: int(used / 1000000),
 			quota_mb: d.daily_quota_mb,
 			action: action
 		}, now);
@@ -292,8 +292,8 @@ conn.publish('wrtpilotd', {
 		call: guarded(() => stats.snapshot(st, sys.time()))
 	},
 	live: {
-		args: { macs: [], samples: 0 },
-		call: guarded((req) => stats.live(st, req.args.macs, req.args.samples))
+		args: { macs: [], samples: 0, devices: true },
+		call: guarded((req) => stats.live(st, req.args.macs, req.args.samples, req.args.devices))
 	},
 	history: {
 		args: { mac: '', resolution: '', since: 0 },

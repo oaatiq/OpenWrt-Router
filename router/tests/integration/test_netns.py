@@ -709,8 +709,13 @@ def test_history(c1):
     check(h.get('ok') is True and len(h.get('series', [])) >= 1, f'minute history ({len(h.get("series", []))} points)')
     h = c1.call('history', {'mac': '', 'resolution': 'day', 'since': 0})
     check(h.get('ok') is True and len(h.get('series', [])) == 1 and h['series'][0][1] > 0, 'daily totals')
+    h = c1.call('history', {'mac': '*', 'resolution': 'day', 'since': 0})
+    per = h.get('devices', {}) if h.get('ok') else {}
+    check(C1_MAC in per and per[C1_MAC][0][1] > 0, 'daily history of all devices')
     h = c1.call('history', {'mac': C1_MAC, 'resolution': 'week', 'since': 0})
     check(h.get('error') == 'invalid_argument', 'bad resolution rejected')
+    live = c1.call('live', {'samples': 2, 'devices': False})
+    check('total' in live and not live.get('devices'), 'live totals without devices')
 
 
 def test_firewall_reload_and_watchdog(c2):

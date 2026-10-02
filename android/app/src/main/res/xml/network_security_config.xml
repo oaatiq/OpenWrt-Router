@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Home routers are reached on the LAN or over Tailscale, usually over plain
+     HTTP (LuCI default). HTTPS with a pinned self-signed certificate is
+     recommended and handled in code. -->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>

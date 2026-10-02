@@ -415,7 +415,8 @@ export function snapshot(st, now) {
 	return { time: now, devices: out };
 };
 
-export function live(st, macs, samples) {
+// devices == false: totals only (dashboard)
+export function live(st, macs, samples, devices) {
 	let n = min(samples ?? st.count, st.count);
 	let idx = [];
 
@@ -423,7 +424,7 @@ export function live(st, macs, samples) {
 		push(idx, (st.pos - i + st.size * 2) % st.size);
 
 	let total_rx = map(idx, i => 0), total_tx = map(idx, i => 0);
-	let devices = {};
+	let per_device = {};
 	let want = length(macs ?? []) ? macs : null;
 
 	for (let mac, r in st.ring) {
@@ -434,32 +435,37 @@ export function live(st, macs, samples) {
 			total_tx[k] += tx[k];
 		}
 
-		if (!want || index(want, mac) >= 0)
-			devices[mac] = { rx: rx, tx: tx };
+		if (devices !== false && (!want || index(want, mac) >= 0))
+			per_device[mac] = { rx: rx, tx: tx };
 	}
 
-	if (want)
+	if (want && devices !== false)
 		for (let mac in want)
-			devices[mac] ??= { rx: map(idx, i => 0), tx: map(idx, i => 0) };
+			per_device[mac] ??= { rx: map(idx, i => 0), tx: map(idx, i => 0) };
 
 	return {
 		interval: st.interval,
 		ts: map(idx, i => st.ring_ts[i]),
 		total: { rx: total_rx, tx: total_tx },
-		devices: devices
+		devices: per_device
 	};
 };
 
-// resolution: minute | hour | day; mac '' = all devices summed
+// resolution: minute | hour | day
+// mac '' = all devices summed, '*' = one series per device ({ devices: {...} })
 export function history(st, mac, resolution, since, now) {
+	let per_device = (mac == '*');
 	let buckets = {};
 
-	let add = function(ts, rx, tx) {
-		let b = buckets[ts] ??= [ 0, 0 ];
+	let add = function(ts, rx, tx, m) {
+		let tbl = per_device ? (buckets[m] ??= {}) : buckets;
+		let b = tbl[ts] ??= [ 0, 0 ];
 
 		b[0] += rx;
 		b[1] += tx;
 	};
+
+	let wanted = (m) => (mac == '' || per_device || m == mac);
 
 	if (resolution == 'day') {
 		for (let k, day in st.days) {
@@ -469,8 +475,8 @@ export function history(st, mac, resolution, since, now) {
 				continue;
 
 			for (let m, v in day)
-				if (mac == '' || m == mac)
-					add(ts, v[0], v[1]);
+				if (wanted(m))
+					add(ts, v[0], v[1], m);
 		}
 	}
 	else {
@@ -486,7 +492,7 @@ export function history(st, mac, resolution, since, now) {
 			for (let line in split(sys.readfile(path) ?? '', '\n')) {
 				let f = split(line, '\t');
 
-				if (length(f) != 4 || (mac != '' && f[1] != mac))
+				if (length(f) != 4 || !wanted(f[1]))
 					continue;
 
 				let ts = +f[0];
@@ -494,23 +500,36 @@ export function history(st, mac, resolution, since, now) {
 				if (ts < from - (from % step))
 					continue;
 
-				add(ts - ts % step, +f[2], +f[3]);
+				add(ts - ts % step, +f[2], +f[3], f[1]);
 			}
 		}
 
 		// include the minute in progress
 		if (st.minute != null)
 			for (let m, a in st.minute_acc)
-				if (mac == '' || m == mac)
-					add(st.minute - st.minute % step, a[0], a[1]);
+				if (wanted(m))
+					add(st.minute - st.minute % step, a[0], a[1], m);
 	}
 
-	let series = [];
+	let to_series = function(tbl) {
+		let series = [];
 
-	for (let ts in sort(map(keys(buckets), k => +k), (a, b) => a - b))
-		push(series, [ ts, buckets[ts][0], buckets[ts][1] ]);
+		for (let ts in sort(map(keys(tbl), k => +k), (a, b) => a - b))
+			push(series, [ ts, tbl[ts][0], tbl[ts][1] ]);
 
-	return { resolution: resolution, mac: mac, series: series };
+		return series;
+	};
+
+	if (per_device) {
+		let devices = {};
+
+		for (let m, tbl in buckets)
+			devices[m] = to_series(tbl);
+
+		return { resolution: resolution, mac: mac, devices: devices };
+	}
+
+	return { resolution: resolution, mac: mac, series: to_series(buckets) };
 };
 
 export function today_usage(st, mac, now) {
