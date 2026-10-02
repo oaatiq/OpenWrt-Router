@@ -1,13 +1,13 @@
 #!/bin/sh
 # Boots the official OpenWrt x86-64 image in QEMU, installs the WrtPilot
-# package with opkg (dependencies from the OpenWrt feeds) and runs the API
-# smoke test against it from the host.
+# package with opkg or apk (dependencies from the OpenWrt feeds) and runs
+# the API smoke test against it from the host.
 #
-# Usage: router/tests/qemu/run.sh <wrtpilot_*.ipk> [openwrt-version]
+# Usage: router/tests/qemu/run.sh <wrtpilot .ipk or .apk> [openwrt-version]
 # Needs: qemu-system-x86_64, curl, ssh, python3 (KVM is used when available)
 set -eu
 
-IPK="$(realpath "$1")"
+PKG="$(realpath "$1")"
 VERSION="${2:-23.05.6}"
 HERE="$(cd "$(dirname "$0")" && pwd)"
 WORK="${WORK:-$(mktemp -d)}"
@@ -59,11 +59,22 @@ for i in $(seq 1 60); do
 	sleep 2
 done
 
-echo "== install $(basename "$IPK")"
-ssh_r 'cat > /tmp/wrtpilot.ipk' < "$IPK"
-ssh_r 'opkg update >/dev/null && opkg install /tmp/wrtpilot.ipk'
+echo "== install $(basename "$PKG")"
+case "$PKG" in
+*.apk)	# OpenWrt 25.12+: apk; CI packages are unsigned
+	ssh_r 'cat > /tmp/wrtpilot.apk' < "$PKG"
+	ssh_r 'apk update >/dev/null && apk add --allow-untrusted /tmp/wrtpilot.apk'
+	REMOVE='apk del wrtpilot'
+	;;
+*)
+	ssh_r 'cat > /tmp/wrtpilot.ipk' < "$PKG"
+	ssh_r 'opkg update >/dev/null && opkg install /tmp/wrtpilot.ipk'
+	REMOVE='opkg remove wrtpilot'
+	;;
+esac
 ssh_r "wrtpilot passwd '$PASSWORD' && wrtpilot credentials | head -1"
 ssh_r 'pgrep -f wrtpilotd >/dev/null && echo "wrtpilotd running"'
+ssh_r 'wrtpilot fingerprint || true'   # needs HTTPS (default on 24.10+ images)
 
 echo "== API smoke test"
 python3 "$HERE/smoke.py" "http://127.0.0.1:$HTTP_PORT/ubus" "$PASSWORD"
@@ -74,6 +85,6 @@ ssh_r 'fw4 reload >/dev/null 2>&1; sleep 1; nft list table inet wrtpilot >/dev/n
 
 echo "== reset and remove"
 ssh_r 'wrtpilot reset && ! nft list table inet wrtpilot >/dev/null 2>&1 && echo "reset removed the rules"'
-ssh_r 'opkg remove wrtpilot >/dev/null && ! ubus list wrtpilot >/dev/null 2>&1 && echo "package removed cleanly"'
+ssh_r "$REMOVE >/dev/null && ! ubus list wrtpilot >/dev/null 2>&1 && echo 'package removed cleanly'"
 
 echo "== passed"

@@ -56,7 +56,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        release: ['23.05.6', '24.10.8']
+        # 23.05 / 24.10 use opkg (.ipk), 25.12 uses apk (.apk)
+        release: ['23.05.6', '24.10.8', '25.12.5']
     steps:
       - uses: actions/checkout@v7
 
@@ -78,14 +79,15 @@ jobs:
       - name: Collect package
         run: |
           mkdir -p "$RUNNER_TEMP/out"
-          find "$GITHUB_WORKSPACE/bin" -name 'wrtpilot_*.ipk' -exec cp {} "$RUNNER_TEMP/out/" \;
+          find "$GITHUB_WORKSPACE/bin" \( -name 'wrtpilot_*.ipk' -o -name 'wrtpilot-[0-9]*.apk' \) \
+            -exec cp {} "$RUNNER_TEMP/out/" \;
           ls -l "$RUNNER_TEMP/out"
           test -n "$(ls "$RUNNER_TEMP/out")"
 
       - uses: actions/upload-artifact@v7
         with:
-          name: wrtpilot-ipk-${{ matrix.release }}
-          path: ${{ runner.temp }}/out/*.ipk
+          name: wrtpilot-openwrt-${{ matrix.release }}
+          path: ${{ runner.temp }}/out/*
           if-no-files-found: error
 
   qemu:
@@ -95,14 +97,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        release: ['23.05.6', '24.10.8']
+        release: ['23.05.6', '24.10.8', '25.12.5']
     steps:
       - uses: actions/checkout@v7
 
       - uses: actions/download-artifact@v8
         with:
-          name: wrtpilot-ipk-${{ matrix.release }}
-          path: ipk
+          name: wrtpilot-openwrt-${{ matrix.release }}
+          path: pkg
 
       - name: Install QEMU
         run: |
@@ -119,7 +121,7 @@ jobs:
           WORK: ${{ runner.temp }}/qemu
         run: |
           mkdir -p "$WORK"
-          router/tests/qemu/run.sh ipk/wrtpilot_*.ipk "${{ matrix.release }}"
+          router/tests/qemu/run.sh pkg/wrtpilot* "${{ matrix.release }}"
 
       - name: Upload console log
         if: failure()
