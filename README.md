@@ -59,8 +59,8 @@ off or the agent crashes, and they survive reboots and `fw4 reload`.
    wrtpilot credentials                               # login for the app
    ```
 
-2. **Install the app**: download `wrtpilot-<version>.apk` from the
-   [latest build](https://github.com/oaatiq/OpenWrt-Router/releases/tag/latest)
+2. **Install the app**: download
+   [wrtpilot.apk](https://github.com/oaatiq/OpenWrt-Router/releases/download/latest/wrtpilot.apk)
    (rebuilt on every push to `main`) and open it on the phone. Tap
    *Add my router*, enter the router's address and the login. The app checks
    what the router supports and tells you what to install for the best results.

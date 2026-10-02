@@ -1,7 +1,8 @@
 name: APK (main)
 
-# Every push to main builds the app and publishes it to the "latest"
-# pre-release: https://github.com/<owner>/<repo>/releases/tag/latest
+# Every push to main builds the app and publishes it as the single file
+# wrtpilot.apk of the "latest" pre-release, so the download link never
+# changes: https://github.com/<owner>/<repo>/releases/download/latest/wrtpilot.apk
 
 on:
   push:
@@ -52,16 +53,15 @@ jobs:
           WRTPILOT_KEYSTORE_PASSWORD: ${{ secrets.WRTPILOT_KEYSTORE_PASSWORD }}
           WRTPILOT_KEY_ALIAS: ${{ secrets.WRTPILOT_KEY_ALIAS }}
           WRTPILOT_KEY_PASSWORD: ${{ secrets.WRTPILOT_KEY_PASSWORD }}
-        run: ./gradlew :app:assembleRelease :app:assembleDebug
+        run: ./gradlew :app:assembleRelease
 
-      - name: Collect APKs
+      - name: Collect APK
         id: apk
         run: |
           version="0.1.0-${{ github.run_number }}"
           out="$RUNNER_TEMP/apk"
           mkdir -p "$out"
-          cp app/build/outputs/apk/release/app-release.apk "$out/wrtpilot-$version.apk"
-          cp app/build/outputs/apk/debug/app-debug.apk "$out/wrtpilot-$version-debug.apk"
+          cp app/build/outputs/apk/release/app-release.apk "$out/wrtpilot.apk"
           ls -l "$out"
           echo "version=$version" >> "$GITHUB_OUTPUT"
           echo "dir=$out" >> "$GITHUB_OUTPUT"
@@ -69,7 +69,7 @@ jobs:
       - uses: actions/upload-artifact@v7
         with:
           name: wrtpilot-apk-${{ steps.apk.outputs.version }}
-          path: ${{ steps.apk.outputs.dir }}/*.apk
+          path: ${{ steps.apk.outputs.dir }}/wrtpilot.apk
           if-no-files-found: error
 
       - name: Publish to the "latest" release
@@ -79,14 +79,13 @@ jobs:
           DIR: ${{ steps.apk.outputs.dir }}
         run: |
           short="${GITHUB_SHA::7}"
-          notes="Automatic build of \`main\` at ${short} (WrtPilot ${VERSION}).
+          notes="WrtPilot ${VERSION}, built automatically from \`main\` at ${short}.
 
-          - \`wrtpilot-${VERSION}.apk\`: the app (optimised build), install this one
-          - \`wrtpilot-${VERSION}-debug.apk\`: debug build, for troubleshooting
+          Download **wrtpilot.apk** below and open it on the phone. New builds install
+          over older ones; the installed version is shown in the app's Settings.
 
-          New builds install over older ones (same signature, higher version code).
           The router package is built by the *Router agent* workflow; see docs/INSTALL.md."
           gh release delete latest --repo "$GITHUB_REPOSITORY" --yes --cleanup-tag || true
-          gh release create latest "$DIR"/*.apk --repo "$GITHUB_REPOSITORY" \
+          gh release create latest "$DIR/wrtpilot.apk" --repo "$GITHUB_REPOSITORY" \
             --target "$GITHUB_SHA" --prerelease \
             --title "Latest build (main, ${VERSION})" --notes "$notes"
