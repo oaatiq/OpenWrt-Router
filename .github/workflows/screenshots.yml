@@ -1,0 +1,101 @@
+name: Screenshots
+
+# Runs the real app in an Android emulator against the mock router and
+# publishes a screenshot of each screen to the "screenshots" branch:
+# https://github.com/<owner>/<repo>/tree/screenshots
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'android/**'
+      - 'tools/mock-router/**'
+      - '.github/workflows/screenshots.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: screenshots
+  cancel-in-progress: true
+
+jobs:
+  screenshots:
+    name: App screenshots
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: gradle/actions/setup-gradle@v6
+
+      - name: Build the app and the screenshot tour
+        working-directory: android
+        run: ./gradlew :app:assembleDebug :app:assembleDebugAndroidTest
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' \
+            | sudo tee /etc/udev/rules.d/99-kvm.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Start the mock router
+        run: |
+          nohup python3 tools/mock-router/mock_router.py --port 8080 --seed 7 \
+            --new-device-after 100000 > "$RUNNER_TEMP/mock.log" 2>&1 &
+          sleep 2
+          curl -fsS http://127.0.0.1:8080/ > /dev/null
+
+      - name: Take the screenshots
+        uses: reactivecircus/android-emulator-runner@v2.38.0
+        with:
+          api-level: 34
+          arch: x86_64
+          target: google_apis
+          profile: pixel_6
+          disable-animations: true
+          script: |
+            adb install -r android/app/build/outputs/apk/debug/app-debug.apk
+            adb install -r android/app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
+            adb shell pm grant io.wrtpilot.app android.permission.POST_NOTIFICATIONS
+            adb shell settings put global sysui_demo_allowed 1
+            adb shell am broadcast -a com.android.systemui.demo -e command enter
+            adb shell am broadcast -a com.android.systemui.demo -e command clock -e hhmm 1200
+            adb shell am broadcast -a com.android.systemui.demo -e command battery -e level 100 -e plugged false
+            adb shell am broadcast -a com.android.systemui.demo -e command network -e wifi show -e level 4 -e mobile hide
+            adb shell am broadcast -a com.android.systemui.demo -e command notifications -e visible false
+            adb shell am instrument -w -e class io.wrtpilot.app.ScreenshotTour io.wrtpilot.app.test/androidx.test.runner.AndroidJUnitRunner | tee "$RUNNER_TEMP/instrument.log"
+            mkdir -p "$RUNNER_TEMP/screenshots" && adb pull /sdcard/Android/data/io.wrtpilot.app/files/screenshots/. "$RUNNER_TEMP/screenshots/" || true
+            grep -q "OK (1 test)" "$RUNNER_TEMP/instrument.log"
+
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: screenshots
+          path: |
+            ${{ runner.temp }}/screenshots/
+            ${{ runner.temp }}/instrument.log
+            ${{ runner.temp }}/mock.log
+
+      - name: Publish to the "screenshots" branch
+        run: |
+          cd "$RUNNER_TEMP/screenshots"
+          {
+            echo "# WrtPilot screenshots"
+            echo
+            echo "Taken automatically from \`${GITHUB_SHA::7}\` against the mock router (tools/mock-router)."
+            echo
+            for f in *.png; do echo "### ${f%.png}"; echo; echo "<img src=\"$f\" width=\"300\">"; echo; done
+          } > README.md
+          git init -q -b screenshots
+          git add .
+          git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+            commit -q -m "Screenshots of ${GITHUB_SHA::7}"
+          git push -q -f "https://x-access-token:${{ github.token }}@github.com/${GITHUB_REPOSITORY}.git" screenshots

@@ -103,4 +103,11 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
 
     testImplementation(libs.junit)
+
+    // screenshot tour (androidTest/ScreenshotTour.kt), run by .github/workflows/screenshots.yml
+    androidTestImplementation(platform(libs.compose.bom))
+    androidTestImplementation(libs.compose.ui.test.junit4)
+    androidTestImplementation(libs.androidx.test.runner)
+    androidTestImplementation(libs.androidx.test.ext.junit)
+    debugImplementation(libs.compose.ui.test.manifest)
 }
