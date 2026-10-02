@@ -59,7 +59,9 @@ off or the agent crashes, and they survive reboots and `fw4 reload`.
    wrtpilot credentials                               # login for the app
    ```
 
-2. **Install the app** (APK from the CI artifacts or a release), tap
+2. **Install the app**: download `wrtpilot-<version>.apk` from the
+   [latest build](https://github.com/oaatiq/OpenWrt-Router/releases/tag/latest)
+   (rebuilt on every push to `main`) and open it on the phone. Tap
    *Add my router*, enter the router's address and the login. The app checks
    what the router supports and tells you what to install for the best results.
 
@@ -75,7 +77,7 @@ off or the agent crashes, and they survive reboots and `fw4 reload`.
 | `tools/mock-router/` | API simulator to develop the app without a router |
 | `tools/oui/` | Builds the manufacturer table bundled in the app |
 | `docs/` | [Install](docs/INSTALL.md), [remote access](docs/TAILSCALE.md), [API](docs/API.md), [configuration](docs/CONFIG.md), [development](docs/DEVELOPMENT.md) |
-| `.github/workflows/` | CI: agent tests, `.ipk`/`.apk` packages, QEMU test on real OpenWrt, Android build |
+| `.github/workflows/` | CI: agent tests, router packages, QEMU test on real OpenWrt, Android build; every push to `main` publishes the APK |
 
 ## Development
 

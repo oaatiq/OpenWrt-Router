@@ -127,3 +127,13 @@ same locally if QEMU is installed).
 | --- | --- |
 | `router.yml` | lint, unit and integration tests (ucode as in OpenWrt and ucode master); packages with the OpenWrt SDK (23.05, 24.10, 25.12); QEMU smoke test on each release |
 | `android.yml` | unit tests, lint, debug and release APKs (artifact `wrtpilot-apk`) |
+| `apk.yml` | on every push to `main`: builds the APKs and publishes them to the [`latest`](https://github.com/oaatiq/OpenWrt-Router/releases/tag/latest) pre-release |
+
+APKs are signed with the shared debug key committed in
+`android/app/debug.keystore` (standard `android` passwords), so any build
+installs over any other, and CI sets an increasing version code. To sign with
+your own key, add the repository secrets `WRTPILOT_KEYSTORE_BASE64`
+(`base64 -w0 release.keystore`), `WRTPILOT_KEYSTORE_PASSWORD`,
+`WRTPILOT_KEY_ALIAS` and `WRTPILOT_KEY_PASSWORD`; note that phones with a
+debug-signed build must uninstall it once before installing the first build
+signed with the new key.

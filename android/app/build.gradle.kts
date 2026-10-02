@@ -15,8 +15,9 @@ android {
         applicationId = "io.wrtpilot.app"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "0.1.0"
+        // CI sets these so every build installs over the previous one
+        versionCode = System.getenv("WRTPILOT_VERSION_CODE")?.toIntOrNull() ?: 1
+        versionName = "0.1.0" + System.getenv("WRTPILOT_VERSION_SUFFIX").orEmpty()
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -24,6 +25,14 @@ android {
     // WRTPILOT_KEY_ALIAS and WRTPILOT_KEY_PASSWORD; otherwise the debug key is used.
     val releaseKeystore = System.getenv("WRTPILOT_KEYSTORE")?.takeIf { it.isNotBlank() }
     signingConfigs {
+        // shared debug key (standard "android" passwords): builds from any
+        // machine or CI run can be installed over each other
+        getByName("debug") {
+            storeFile = file("debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
         if (releaseKeystore != null) {
             create("release") {
                 storeFile = file(releaseKeystore)
