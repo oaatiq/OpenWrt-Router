@@ -437,7 +437,9 @@ export function capabilities() {
 
 	return {
 		tc: tc && module_available('sch_htb'),
-		ifb: tcstate.ifb_failed ? false : (module_available('ifb') || tcstate.ifb_ok == true),
+		// built-in ifb leaves no trace in /sys/module: assume usable until
+		// creating the device actually failed (apply then falls back)
+		ifb: !tcstate.ifb_failed,
 		sqm: sys.exists('/etc/init.d/sqm'),
 		cake: module_available('sch_cake'),
 		nftset: dnsmasq_has_nftset(),

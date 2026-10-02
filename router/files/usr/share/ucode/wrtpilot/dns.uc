@@ -110,8 +110,11 @@ export function generate(g, ctx) {
 		`pid-file=${RUN_DIR}/dnsmasq-${g.id}.pid`
 	];
 
-	if (ctx.user)
-		push(lines, `user=${ctx.user}`, `group=${ctx.user}`);
+	if (ctx.user?.user)
+		push(lines, `user=${ctx.user.user}`);
+
+	if (ctx.user?.group)
+		push(lines, `group=${ctx.user.group}`);
 
 	// local names and reverse lookups stay with the main resolver
 	for (let zone in [ ctx.local_domain ?? 'lan', 'in-addr.arpa', 'ip6.arpa' ])
@@ -211,10 +214,15 @@ export function safesearch_ips(now) {
 	return ips;
 };
 
+// { user, group } to drop privileges to, when the dnsmasq account exists
 export function dnsmasq_user() {
 	let passwd = sys.readfile('/etc/passwd') ?? '';
+	let group = sys.readfile('/etc/group') ?? '';
 
-	return match(passwd, /(^|\n)dnsmasq:/) ? 'dnsmasq' : null;
+	if (!match(passwd, /(^|\n)dnsmasq:/))
+		return null;
+
+	return { user: 'dnsmasq', group: match(group, /(^|\n)dnsmasq:/) ? 'dnsmasq' : null };
 };
 
 export function local_domain() {

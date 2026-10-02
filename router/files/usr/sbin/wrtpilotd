@@ -195,11 +195,14 @@ function expire(now) {
 	}
 }
 
-function on_minute(now) {
+// every PRESENCE_INTERVAL seconds: cheap unless something is due
+function housekeeping(now) {
 	reload_config();
 	check_quotas(now);
 	expire(now);
+}
 
+function on_minute(now) {
 	let day = day_key(now);
 	let hour = now - now % 3600;
 
@@ -232,7 +235,7 @@ function tick() {
 
 	if (!acct) {
 		// our tables vanished (firewall flushed, include disabled): restore
-		if (++missing >= 2 && now - last_apply > 30)
+		if (++missing >= 2 && now - last_apply > 10)
 			run_apply('tables missing');
 	}
 	else {
@@ -247,8 +250,10 @@ function tick() {
 			on_minute(now);
 	}
 
-	if (now - last_presence >= PRESENCE_INTERVAL)
+	if (now - last_presence >= PRESENCE_INTERVAL) {
 		refresh_presence(now);
+		housekeeping(now);
+	}
 }
 
 function guarded(fn) {

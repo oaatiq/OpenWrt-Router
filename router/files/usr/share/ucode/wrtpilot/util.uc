@@ -115,6 +115,8 @@ export function ubus_call(object, method, args) {
 	return null;
 };
 
+// Names of ubus objects matching a wildcard pattern. (list() with a
+// pattern returns method signatures, not names, so filter ourselves.)
 export function ubus_list(pattern) {
 	if (sys.ubus)
 		return sys.ubus.list(pattern);
@@ -124,7 +126,9 @@ export function ubus_list(pattern) {
 		ubus_conn = ubus.connect(null, 3);
 	}
 
-	return ubus_conn?.list(pattern) ?? [];
+	let names = ubus_conn?.list() ?? [];
+
+	return filter(names, n => type(n) == 'string' && wildcard(n, pattern));
 };
 
 export function shellquote(s) {

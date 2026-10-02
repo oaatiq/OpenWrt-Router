@@ -108,7 +108,7 @@ ok(!t3.active && t3.batch == '', 'no limits => no shaping at all');
 
 // --- dnsmasq ---
 let g = { id: 'kids', dns_filter: 'cleanbrowsing_family', dns_custom: [], safesearch: true, blocklist: [ 'tiktok.com', 'roblox.com' ] };
-let conf = dns.generate(g, { port: 5301, lan: [ 'br-lan' ], settings: { adguard_port: 5353 }, nftset: true, filtered: true, local_domain: 'lan', user: 'dnsmasq', safesearch_ips: {} });
+let conf = dns.generate(g, { port: 5301, lan: [ 'br-lan' ], settings: { adguard_port: 5353 }, nftset: true, filtered: true, local_domain: 'lan', user: { user: 'dnsmasq', group: 'dnsmasq' }, safesearch_ips: {} });
 
 contains(conf, 'port=5301');
 contains(conf, 'interface=br-lan');
@@ -124,6 +124,7 @@ contains(conf, 'address=/www.bing.com/::', 'no IPv6 bypass of SafeSearch');
 contains(conf, 'address=/use-application-dns.net/', 'Firefox DoH canary');
 contains(conf, 'nftset=/dns.google/');
 contains(conf, 'user=dnsmasq');
+contains(conf, 'group=dnsmasq');
 
 let conf2 = dns.generate({ id: 'teens', dns_filter: 'off', dns_custom: [], safesearch: false, blocklist: [ 'example.com' ] },
 	{ port: 5302, lan: [ 'br-lan' ], settings: { adguard_port: 5353 }, nftset: false, filtered: true, safesearch_ips: {} });
