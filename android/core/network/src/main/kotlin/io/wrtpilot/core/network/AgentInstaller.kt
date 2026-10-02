@@ -59,9 +59,15 @@ class AgentInstaller(
         }
     }
 
-    /** The one-time job: removes itself first, so it runs once even when the download fails. */
+    /**
+     * The one-time job: removes itself first, so it runs once even when the
+     * download fails. `install.sh --app` reports to the system log itself; when
+     * it cannot be downloaded or does not run (an older installer), the job
+     * reports the failure so the app does not wait for nothing.
+     */
     fun cronLine(): String =
-        "* * * * * sed -i /$MARKER/d $CRONTAB;wget -qO $SCRIPT '$installerUrl'&&sh $SCRIPT --app $id"
+        "* * * * * sed -i /$MARKER/d $CRONTAB;wget -qO $SCRIPT '$installerUrl'&&sh $SCRIPT --app $id||" +
+            "{ L='logger -t wrtpilot-install';\$L started $id;\$L $START_FAILED;\$L finished $id rc=1;}"
 
     /**
      * Waits for the installer to finish, reporting its progress; returns the
@@ -190,6 +196,7 @@ class AgentInstaller(
             "https://github.com/oaatiq/OpenWrt-Router/releases/download/router-latest/install.sh"
         const val AGENT_USER = "wrtpilot"
         private const val MARKER = "wrtpilot-app-install"
+        const val START_FAILED = "The router could not download or start the installer."
         private const val TAG = "wrtpilot-install: "
         private const val CRONTAB = "/etc/crontabs/root"
         private const val SCRIPT = "/tmp/wrtpilot-install.sh"

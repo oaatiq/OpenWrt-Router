@@ -134,7 +134,7 @@ class AgentInstallerTest {
         // removes itself before anything else, so a failed download does not repeat every minute
         assertTrue(lines[1].startsWith("* * * * * sed -i /wrtpilot-app-install/d /etc/crontabs/root;"))
         assertTrue(lines[1].contains(AgentInstaller.INSTALLER_URL))
-        assertTrue(lines[1].endsWith("--app $ID"))
+        assertTrue(lines[1].contains("sh /tmp/wrtpilot-install.sh --app $ID||"))
         assertFalse("crond treats # and % specially", lines[1].contains('#') || lines[1].contains('%'))
         assertEquals(listOf("/etc/init.d/cron reload"), execs)
     }
@@ -189,6 +189,29 @@ class AgentInstallerTest {
             assertTrue(e.log.contains("download failed"))
         }
         assertNull(files[CRONTAB])
+    }
+
+    @Test
+    fun `fails at once when the router cannot download or start the installer`() = runTest {
+        // what the job's fallback branch logs (no internet, or an installer without --app)
+        script = { poll ->
+            if (poll == 1) {
+                files[CRONTAB] = ""
+                log("started $ID")
+                log(AgentInstaller.START_FAILED)
+                log("finished $ID rc=1")
+            }
+        }
+        val inst = installer()
+        inst.start()
+        try {
+            inst.awaitLogin { }
+            fail("expected Failed")
+        } catch (e: AgentInstaller.Failed) {
+            assertEquals(1, e.exitCode)
+            assertEquals(AgentInstaller.START_FAILED, e.log)
+        }
+        assertEquals(1, polls)
     }
 
     @Test
